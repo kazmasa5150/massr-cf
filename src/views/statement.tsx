@@ -65,7 +65,7 @@ export const StatementItem: FC<{
         )}
 
         {s.photos.length > 0 && (
-          <div className="statement-photos">
+          <div className={`statement-photos photos-count-${Math.min(s.photos.length, 4)}`}>
             {s.photos.map((url) => (
               <span className="statement-photo-item">
                 <a href={url} className="photo-link" data-lightbox-group={`stmt-${s.id}`}>
@@ -198,7 +198,7 @@ export const PostForm: FC<{ settings: MassrSettings }> = ({ settings }) => (
         <span className="photo-items">
           <label className="photo-button">
             {term(settings, "attach_photo")}
-            <input type="file" name="photo" accept="image/*" />
+            <input type="file" name="photo" accept="image/*" multiple />
           </label>
         </span>
         <span className="stamp-items">

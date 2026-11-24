@@ -530,6 +530,47 @@ img.statement-photo {
   cursor: pointer;
   padding: 0;
 }
+/* 複数写真は四角いグリッドで並べる（2枚以上で 2 列） */
+.statement-photos.photos-count-2,
+.statement-photos.photos-count-3,
+.statement-photos.photos-count-4 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 4px;
+  max-width: 344px;
+}
+.statement-photos.photos-count-2 .statement-photo-item,
+.statement-photos.photos-count-3 .statement-photo-item,
+.statement-photos.photos-count-4 .statement-photo-item {
+  display: block;
+  margin-right: 0;
+  position: relative;
+}
+.statement-photos.photos-count-2 a.photo-link,
+.statement-photos.photos-count-3 a.photo-link,
+.statement-photos.photos-count-4 a.photo-link {
+  display: block;
+}
+.statement-photos.photos-count-2 img.statement-photo,
+.statement-photos.photos-count-3 img.statement-photo,
+.statement-photos.photos-count-4 img.statement-photo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  max-height: none;
+}
+.statement-photos.photos-count-2 .stamp-add-btn,
+.statement-photos.photos-count-3 .stamp-add-btn,
+.statement-photos.photos-count-4 .stamp-add-btn {
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: 3px;
+  padding: 1px 6px;
+}
 div.statement-info {
   border-style: solid;
   border-width: 1px 1px 1px 0;

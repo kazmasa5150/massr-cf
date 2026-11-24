@@ -20,6 +20,9 @@ import { PhotosPage, StatementPage, toSidebarData } from "../views/pages";
 
 const app = new Hono<AppEnv>();
 
+/** 1投稿に添付できる写真の上限。 */
+const MAX_PHOTOS_PER_POST = 4;
+
 /** media プラグインでファイルをアップロードし、URL を返す。写真が無い場合は null。 */
 async function uploadPhoto(
   c: Context<AppEnv>,
@@ -44,10 +47,19 @@ async function uploadPhoto(
 async function postStatement(c: Context<AppEnv>, format: "html" | "json") {
   const me = c.get("currentUser")!;
   const settings = c.get("settings");
-  const form = await c.req.parseBody();
+  // all: true で同名フィールド（写真の複数添付）を配列として受け取る。
+  const form = await c.req.parseBody({ all: true });
 
-  const photoUrl = await uploadPhoto(c, form["photo"], settings.setting.upload_photo_size);
-  const photos = photoUrl ? [photoUrl] : [];
+  const rawPhotoField: unknown = form["photo"];
+  const photoFiles = (Array.isArray(rawPhotoField) ? rawPhotoField : [rawPhotoField]).slice(
+    0,
+    MAX_PHOTOS_PER_POST,
+  );
+  const photos: string[] = [];
+  for (const f of photoFiles) {
+    const url = await uploadPhoto(c, f, settings.setting.upload_photo_size);
+    if (url) photos.push(url);
+  }
 
   const bodyText = typeof form["body"] === "string" ? form["body"] : "";
   const stamp = typeof form["stamp"] === "string" && form["stamp"] ? form["stamp"] : null;

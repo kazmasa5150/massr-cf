@@ -110,4 +110,15 @@ appjs=$(curl -s $B/js/app.js)
 contains "app.js has lightbox code" 'lightbox' "$appjs"
 contains "lightbox image click navigates to the image" 'lightboxImg.addEventListener' "$appjs"
 
+# --- multiple photos (max 4, square grid) ---
+printf 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==' | base64 -d > /tmp/test.png
+multi=$(curl -s "${A[@]}" -F 'body=multi photo post' -F 'photo=@/tmp/test.png' -F 'photo=@/tmp/test.png' -F 'photo=@/tmp/test.png' $B/statement.json)
+mlen=$(printf '%s' "$multi" | json_get "len(d['photos'])")
+check "3 photos attached at once" "3" "$mlen"
+five=$(curl -s "${A[@]}" -F 'body=five photo post' -F 'photo=@/tmp/test.png' -F 'photo=@/tmp/test.png' -F 'photo=@/tmp/test.png' -F 'photo=@/tmp/test.png' -F 'photo=@/tmp/test.png' $B/statement.json)
+flen=$(printf '%s' "$five" | json_get "len(d['photos'])")
+check "5 uploads capped at 4 photos" "4" "$flen"
+top=$(curl -s "${A[@]}" $B/)
+contains "multi photos use square grid class" 'photos-count-3' "$top"
+
 echo "== RESULT: pass=$pass fail=$fail"
