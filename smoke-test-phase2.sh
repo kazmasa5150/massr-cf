@@ -103,4 +103,10 @@ purl=$(printf '%s' "$photos" | json_get "d[0]['photos'][0]")
 hdr=$(curl -s -I "${A[@]}" "$B$purl" | grep -i 'x-content-type-options' || true)
 contains "media served with nosniff" 'nosniff' "$hdr"
 
+# --- photo lightbox ---
+top=$(curl -s "${A[@]}" $B/)
+contains "timeline photos use lightbox links" 'photo-link' "$top"
+appjs=$(curl -s $B/js/app.js)
+contains "app.js has lightbox code" 'lightbox' "$appjs"
+
 echo "== RESULT: pass=$pass fail=$fail"

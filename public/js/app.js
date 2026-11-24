@@ -301,4 +301,89 @@
         .catch(function () {});
     });
   });
+
+  // 写真のポップアップ表示（元の magnific-popup 相当）。
+  var lightbox = null;
+  var lightboxImg = null;
+  var lightboxPrev = null;
+  var lightboxNext = null;
+  var lightboxUrls = [];
+  var lightboxIndex = 0;
+
+  function ensureLightbox() {
+    if (lightbox) return;
+    lightbox = document.createElement("div");
+    lightbox.className = "lightbox";
+    lightbox.hidden = true;
+    var close = document.createElement("button");
+    close.type = "button";
+    close.className = "lightbox-close";
+    close.textContent = "\u00d7";
+    close.setAttribute("aria-label", "close");
+    lightboxPrev = document.createElement("button");
+    lightboxPrev.type = "button";
+    lightboxPrev.className = "lightbox-prev";
+    lightboxPrev.textContent = "\u2039";
+    lightboxPrev.setAttribute("aria-label", "prev");
+    lightboxNext = document.createElement("button");
+    lightboxNext.type = "button";
+    lightboxNext.className = "lightbox-next";
+    lightboxNext.textContent = "\u203a";
+    lightboxNext.setAttribute("aria-label", "next");
+    lightboxImg = document.createElement("img");
+    lightboxImg.className = "lightbox-img";
+    lightboxImg.alt = "photo";
+    lightbox.appendChild(lightboxPrev);
+    lightbox.appendChild(lightboxImg);
+    lightbox.appendChild(lightboxNext);
+    lightbox.appendChild(close);
+    document.body.appendChild(lightbox);
+    close.addEventListener("click", closeLightbox);
+    lightboxPrev.addEventListener("click", function () { showLightbox(lightboxIndex - 1); });
+    lightboxNext.addEventListener("click", function () { showLightbox(lightboxIndex + 1); });
+    lightbox.addEventListener("click", function (e) {
+      if (e.target === lightbox) closeLightbox();
+    });
+    document.addEventListener("keydown", function (e) {
+      if (!lightbox || lightbox.hidden) return;
+      if (e.key === "Escape") closeLightbox();
+      if (e.key === "ArrowLeft") showLightbox(lightboxIndex - 1);
+      if (e.key === "ArrowRight") showLightbox(lightboxIndex + 1);
+    });
+  }
+
+  function showLightbox(index) {
+    if (index < 0 || index >= lightboxUrls.length) return;
+    lightboxIndex = index;
+    lightboxImg.src = lightboxUrls[index];
+    lightboxPrev.style.visibility = index > 0 ? "" : "hidden";
+    lightboxNext.style.visibility = index < lightboxUrls.length - 1 ? "" : "hidden";
+  }
+
+  function openLightbox(urls, index) {
+    ensureLightbox();
+    lightboxUrls = urls;
+    lightbox.hidden = false;
+    document.body.style.overflow = "hidden";
+    showLightbox(index);
+  }
+
+  function closeLightbox() {
+    if (!lightbox) return;
+    lightbox.hidden = true;
+    lightboxImg.src = "";
+    document.body.style.overflow = "";
+  }
+
+  document.querySelectorAll("a.photo-link").forEach(function (link) {
+    link.addEventListener("click", function (e) {
+      e.preventDefault();
+      var group = link.getAttribute("data-lightbox-group");
+      var links = Array.prototype.slice.call(
+        document.querySelectorAll('a.photo-link[data-lightbox-group="' + group + '"]')
+      );
+      var urls = links.map(function (l) { return l.getAttribute("href"); });
+      openLightbox(urls, links.indexOf(link));
+    });
+  });
 })();

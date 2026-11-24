@@ -68,7 +68,7 @@ export const StatementItem: FC<{
           <div className="statement-photos">
             {s.photos.map((url) => (
               <span className="statement-photo-item">
-                <a href={url}>
+                <a href={url} className="photo-link" data-lightbox-group={`stmt-${s.id}`}>
                   <img className="statement-photo" src={url} alt="photo" />
                 </a>
                 <button
