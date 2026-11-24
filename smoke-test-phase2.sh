@@ -130,4 +130,23 @@ check "photo-only post has null body" "None" "$ib"
 code=$(curl -s -o /dev/null -w '%{http_code}' "${A[@]}" -X POST -d 'body=' $B/statement.json)
 check "empty post without photo is still 400" "400" "$code"
 
+# --- last-admin guard (demote/delete allowed, but never to zero admins) ---
+ustatus() { curl -s "${A[@]}" $B/index.json | python3 -c "
+import sys, json
+d = json.load(sys.stdin)
+u = [s['user'] for s in d if s['user']['massr_id'] == '$1']
+print(u[0]['status'] if u else 'missing')"; }
+curl -s -o /dev/null "${A[@]}" -X PUT -d 'status=1' $B/user/alice
+check "sole admin cannot demote self (PUT)" "0" "$(ustatus alice)"
+curl -s -o /dev/null "${A[@]}" -X POST -d '_method=put&status=1' $B/user/alice
+check "sole admin cannot demote self (form)" "0" "$(ustatus alice)"
+curl -s -o /dev/null "${A[@]}" -X DELETE $B/user/alice
+check "sole admin cannot delete self" "0" "$(ustatus alice)"
+curl -s -o /dev/null "${A[@]}" -X PUT -d 'status=0' $B/user/bob
+check "promote bob to admin" "0" "$(ustatus bob)"
+curl -s -o /dev/null "${A[@]}" -X PUT -d 'status=1' $B/user/alice
+check "demote allowed when another admin exists" "1" "$(ustatus alice)"
+curl -s -o /dev/null "${BOB[@]}" -X PUT -d 'status=0' $B/user/alice
+check "bob restores alice to admin" "0" "$(ustatus alice)"
+
 echo "== RESULT: pass=$pass fail=$fail"

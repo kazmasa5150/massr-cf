@@ -204,6 +204,15 @@ export async function listUsers(db: D1Database): Promise<UserRow[]> {
   return results;
 }
 
+/** 現在の管理者数。管理者が 0 人になる操作を防ぐためのガードに使う。 */
+export async function countAdmins(db: D1Database): Promise<number> {
+  const row = await db
+    .prepare("SELECT COUNT(*) AS n FROM users WHERE status = ?")
+    .bind(STATUS.ADMIN)
+    .first<{ n: number }>();
+  return row?.n ?? 0;
+}
+
 /** 管理者によるステータス変更（元の change_status: 0/1/9 以外は無視）。 */
 export async function changeUserStatus(
   db: D1Database,

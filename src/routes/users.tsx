@@ -5,6 +5,7 @@ import {
   PAGE_LIMIT,
   STATUS,
   changeUserStatus,
+  countAdmins,
   clearResNotifications,
   countResNotifications,
   createUser,
@@ -285,11 +286,19 @@ app.get("/admin", async (c) => {
 
 /* ---------- 管理者操作（元の PUT / DELETE /user/:massr_id） ---------- */
 
+/** 最後の管理者かどうか。管理者が 0 人になる降格・削除を防ぐための判定。 */
+async function isLastAdmin(c: Context<AppEnv>, massrId: string): Promise<boolean> {
+  const target = await getUserByMassrId(c.env.DB, massrId);
+  if (!target || target.status !== STATUS.ADMIN) return false;
+  return (await countAdmins(c.env.DB)) <= 1;
+}
+
 async function adminChangeStatus(c: Context<AppEnv>, massrId: string): Promise<boolean> {
   const me = c.get("currentUser");
   if (!me || me.status !== STATUS.ADMIN) return false;
   const form = await c.req.parseBody();
   const status = Number(form["status"]);
+  if (status !== STATUS.ADMIN && (await isLastAdmin(c, massrId))) return false;
   await changeUserStatus(c.env.DB, massrId, status);
   return true;
 }
@@ -297,6 +306,7 @@ async function adminChangeStatus(c: Context<AppEnv>, massrId: string): Promise<b
 async function adminDeleteUser(c: Context<AppEnv>, massrId: string): Promise<boolean> {
   const me = c.get("currentUser");
   if (!me || me.status !== STATUS.ADMIN) return false;
+  if (await isLastAdmin(c, massrId)) return false;
   const target = await getUserByMassrId(c.env.DB, massrId);
   if (target) await deleteUserCascade(c.env.DB, target);
   return true;
@@ -321,10 +331,15 @@ app.post("/user/:massr_id", async (c) => {
   const me = c.get("currentUser");
   if (!me || me.status !== STATUS.ADMIN) return c.redirect("/");
   if (method === "put") {
-    await changeUserStatus(c.env.DB, massrId, Number(form["status"]));
+    const status = Number(form["status"]);
+    if (!(status !== STATUS.ADMIN && (await isLastAdmin(c, massrId)))) {
+      await changeUserStatus(c.env.DB, massrId, status);
+    }
   } else if (method === "delete") {
-    const target = await getUserByMassrId(c.env.DB, massrId);
-    if (target) await deleteUserCascade(c.env.DB, target);
+    if (!(await isLastAdmin(c, massrId))) {
+      const target = await getUserByMassrId(c.env.DB, massrId);
+      if (target) await deleteUserCascade(c.env.DB, target);
+    }
   }
   return c.redirect("/users.html");
 });
