@@ -15,8 +15,8 @@ export interface SidebarData {
 
 /**
  * 共通レイアウト（元の head / header / sidebar / footer に相当）。
- * 上部ナビバー＋中央寄せコンテナ（最大 700px）＋右サイドバー＋マサオフッターで、
- * 元の Bootstrap 版の見た目に寄せている（ドロップダウンは平坦なリンクで代替）。
+ * 上部ナビバー（写真・わかるわ・設定は元の通りドロップダウン）＋中央寄せコンテナ
+ * （最大 700px）＋右サイドバー＋マサオフッターで、元の Bootstrap 版の見た目に寄せている。
  */
 export const Layout: FC<
   PropsWithChildren<{
@@ -55,17 +55,44 @@ export const Layout: FC<
                     {resSize}
                   </span>
                 </a>
-                <a href={`/user/${me.massr_id}/photos`}>
-                  {term(settings, "user_photos", me.name)}
-                </a>
-                <a href="/statement/photos">{term(settings, "all_photos")}</a>
-                <a href="/stamps">{term(settings, "stamps")}</a>
-                <a href={`/user/${me.massr_id}/liked`}>{term(settings, "liked")}</a>
-                <a href={`/user/${me.massr_id}/likes`}>{term(settings, "likes")}</a>
+                <div className="dropdown">
+                  <button type="button" className="dropdown-toggle">
+                    {term(settings, "photos")}
+                    <b className="caret"></b>
+                  </button>
+                  <ul className="dropdown-menu">
+                    <li>
+                      <a href={`/user/${me.massr_id}/photos`}>
+                        {term(settings, "user_photos", me.name)}
+                      </a>
+                    </li>
+                    <li>
+                      <a href="/statement/photos">{term(settings, "all_photos")}</a>
+                    </li>
+                    <li>
+                      <a href="/stamps">{term(settings, "stamps")}</a>
+                    </li>
+                  </ul>
+                </div>
+                <div className="dropdown">
+                  <button type="button" className="dropdown-toggle">
+                    {term(settings, "like")}
+                    <b className="caret"></b>
+                  </button>
+                  <ul className="dropdown-menu">
+                    <li>
+                      <a href={`/user/${me.massr_id}/liked`}>
+                        {term(settings, "liked")}
+                      </a>
+                    </li>
+                    <li>
+                      <a href={`/user/${me.massr_id}/likes`}>
+                        {term(settings, "likes")}
+                      </a>
+                    </li>
+                  </ul>
+                </div>
                 <a href="/users.html">{term(settings, "member")}</a>
-                <a href="/user">{term(settings, "settings")}</a>
-                {me.isAdmin && <a href="/admin">{term(settings, "admin_menu")}</a>}
-                <a href="/logout">{term(settings, "logout")}</a>
                 <form className="navbar-search" action="/search" method="get">
                   <input
                     type="text"
@@ -77,6 +104,34 @@ export const Layout: FC<
                     {term(settings, "search")}
                   </button>
                 </form>
+                <div className="dropdown dropdown-right">
+                  <button type="button" className="dropdown-toggle">
+                    {term(settings, "settings")}
+                    <b className="caret"></b>
+                  </button>
+                  <ul className="dropdown-menu">
+                    <li>
+                      <a href={`/user/${me.massr_id}`}>
+                        {me.iconUrl && (
+                          <img className="massr-icon" src={me.iconUrl} alt="" />
+                        )}
+                        {me.name}
+                      </a>
+                    </li>
+                    <li>
+                      <a href="/user">{term(settings, "settings")}</a>
+                    </li>
+                    {me.isAdmin && (
+                      <li>
+                        <a href="/admin">{term(settings, "admin_menu")}</a>
+                      </li>
+                    )}
+                    <li className="divider"></li>
+                    <li>
+                      <a href="/logout">{term(settings, "logout")}</a>
+                    </li>
+                  </ul>
+                </div>
               </nav>
             )}
           </div>

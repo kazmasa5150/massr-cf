@@ -84,8 +84,8 @@ registerPlugin("notify/like", (info, opts, ctx): NotifyPlugin => {
       const icons = Object.entries(likes)
         .map(([user, [, https]]) =>
           deleteMode === "any"
-            ? `<a href="#" data-notify-like-delete="${instanceId}" data-user="${user}"><img class="liker-icon" src="${https}" alt="${user}" title="delete ${user}"></a>`
-            : `<img class="liker-icon" src="${https}" alt="${user}">`,
+            ? `<a href="#" data-notify-like-delete="${instanceId}" data-user="${user}"><img class="massr-icon-mini" src="${https}" alt="${user}" title="delete ${user}"></a>`
+            : `<img class="massr-icon-mini" src="${https}" alt="${user}">`,
         )
         .join("");
       return (

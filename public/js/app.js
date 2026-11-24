@@ -206,6 +206,25 @@
     });
   });
 
+  // ナビのドロップダウン（タッチ操作用にクリックでも開閉する。ホバーでも開く）。
+  document.querySelectorAll(".dropdown-toggle").forEach(function (btn) {
+    btn.addEventListener("click", function (ev) {
+      ev.stopPropagation();
+      var dd = btn.closest(".dropdown");
+      if (!dd) return;
+      var wasOpen = dd.classList.contains("open");
+      document.querySelectorAll(".dropdown.open").forEach(function (d) {
+        d.classList.remove("open");
+      });
+      if (!wasOpen) dd.classList.add("open");
+    });
+  });
+  document.addEventListener("click", function () {
+    document.querySelectorAll(".dropdown.open").forEach(function (d) {
+      d.classList.remove("open");
+    });
+  });
+
   // 画像が無いマサオ等は隠す（icon プラグインの月替わり先に画像が無い場合）。
   document.querySelectorAll("img.masao-img").forEach(function (img) {
     img.addEventListener("error", function () {

@@ -95,6 +95,80 @@ h1 {
   align-items: center;
   gap: 0;
 }
+
+/* dropdown menus (元の Bootstrap ドロップダウン相当) */
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
+.dropdown-toggle {
+  background: none;
+  border: none;
+  color: #777;
+  text-shadow: 0 1px 0 #fff;
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+  padding: 6px 2px;
+}
+.dropdown-toggle:hover {
+  color: #333;
+}
+.caret {
+  display: inline-block;
+  width: 0;
+  height: 0;
+  border-top: 4px solid #777;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  vertical-align: middle;
+  margin-left: 3px;
+}
+.dropdown-menu {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  border-radius: 6px;
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+  padding: 5px 0;
+  min-width: 170px;
+  z-index: 1000;
+  list-style: none;
+  text-align: left;
+}
+.dropdown-right .dropdown-menu {
+  left: auto;
+  right: 0;
+}
+.dropdown:hover .dropdown-menu,
+.dropdown:focus-within .dropdown-menu,
+.dropdown.open .dropdown-menu {
+  display: block;
+}
+.dropdown-menu li a {
+  display: block;
+  padding: 4px 16px;
+  color: #333;
+  font-size: 13px;
+  white-space: nowrap;
+}
+.dropdown-menu li a:hover {
+  background-color: #08c;
+  color: #fff;
+  text-decoration: none;
+}
+.dropdown-menu li a img.massr-icon {
+  vertical-align: middle;
+  margin-right: 6px;
+}
+.dropdown-menu .divider {
+  height: 1px;
+  background-color: #e5e5e5;
+  margin: 5px 0;
+}
 .search-query {
   border: 1px solid #ccc;
   border-radius: 14px;
@@ -394,9 +468,9 @@ div.statement-res-icon img {
 }
 div.statement-res {
   font-size: 83%;
-  height: 1.2em;
+  height: 1.5em;
   white-space: nowrap;
-  line-height: 120%;
+  line-height: 150%;
   overflow: hidden;
   text-overflow: ellipsis;
   padding: 2px;
@@ -461,12 +535,10 @@ div.statement-info {
   border-width: 1px 1px 1px 0;
   border-color: #eee;
   font-size: 70%;
-  height: 1.1em;
-  overflow: hidden;
-  line-height: 110%;
+  line-height: 150%;
   background-color: #f8f8f8;
   margin-top: 4px;
-  padding: 2px;
+  padding: 3px 2px;
   clear: both;
 }
 div.statement-action {
@@ -667,5 +739,8 @@ img.icon-large {
   font-size: 13px;
 }
 .notify-like-icons img {
+  width: 20px;
+  height: 20px;
   margin-right: 2px;
+  vertical-align: middle;
 }
