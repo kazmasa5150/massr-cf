@@ -108,5 +108,6 @@ top=$(curl -s "${A[@]}" $B/)
 contains "timeline photos use lightbox links" 'photo-link' "$top"
 appjs=$(curl -s $B/js/app.js)
 contains "app.js has lightbox code" 'lightbox' "$appjs"
+contains "lightbox image click navigates to the image" 'lightboxImg.addEventListener' "$appjs"
 
 echo "== RESULT: pass=$pass fail=$fail"

@@ -760,6 +760,7 @@ img.icon-large {
   max-width: 92vw;
   max-height: 92vh;
   box-shadow: 0 2px 24px rgba(0, 0, 0, 0.6);
+  cursor: pointer;
 }
 .lightbox button {
   background: none;

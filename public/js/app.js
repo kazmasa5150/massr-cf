@@ -333,6 +333,12 @@
     lightboxImg = document.createElement("img");
     lightboxImg.className = "lightbox-img";
     lightboxImg.alt = "photo";
+    // ポップアップ中の画像をクリックしたら画像自体へ遷移する。
+    lightboxImg.addEventListener("click", function () {
+      if (lightboxUrls[lightboxIndex]) {
+        window.location.href = lightboxUrls[lightboxIndex];
+      }
+    });
     lightbox.appendChild(lightboxPrev);
     lightbox.appendChild(lightboxImg);
     lightbox.appendChild(lightboxNext);
