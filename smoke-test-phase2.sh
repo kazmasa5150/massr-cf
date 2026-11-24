@@ -149,4 +149,12 @@ check "demote allowed when another admin exists" "1" "$(ustatus alice)"
 curl -s -o /dev/null "${BOB[@]}" -X PUT -d 'status=0' $B/user/alice
 check "bob restores alice to admin" "0" "$(ustatus alice)"
 
+# --- inline res form under each statement ---
+top=$(curl -s "${A[@]}" $B/)
+contains "statement has inline res form" 'res-form' "$top"
+contains "res form carries res_id" 'name="res_id"' "$top"
+case "$top" in *'res-banner'*) echo 'FAIL: old res banner removed'; fail=$((fail+1));; *) echo 'PASS: old res banner removed'; pass=$((pass+1));; esac
+appjs=$(curl -s $B/js/app.js)
+contains "app.js toggles inline res form" 'res-form-' "$appjs"
+
 echo "== RESULT: pass=$pass fail=$fail"

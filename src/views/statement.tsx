@@ -15,7 +15,6 @@ export const StatementItem: FC<{
 }> = ({ s, settings, meMassrId, highlight }) => {
   const liked = s.likes.some((l) => l.user.massr_id === meMassrId);
   const own = s.user.massr_id === meMassrId;
-  const resLabel = s.body ? s.body.slice(0, 40) : "";
   return (
     <div
       className={highlight ? "statement statement-new" : "statement"}
@@ -95,12 +94,7 @@ export const StatementItem: FC<{
               {term(settings, "delete")}
             </a>
           )}
-          <a
-            href="#"
-            data-res-btn={s.id}
-            data-res-label={resLabel}
-            title={term(settings, "res")}
-          >
+          <a href="#" data-res-btn={s.id} title={term(settings, "res")}>
             {term(settings, "res")}
             {s.ref_ids.length > 0 ? `(${s.ref_ids.length})` : ""}
           </a>
@@ -139,6 +133,30 @@ export const StatementItem: FC<{
             ))}
           </span>
         </div>
+
+        {/* レスフォーム（元の .response / form.res-form）。レスボタンで開閉する。 */}
+        <div className="response" id={`res-form-${s.id}`} hidden>
+          <form
+            method="post"
+            action="/statement"
+            enctype="multipart/form-data"
+            className="res-form"
+          >
+            <div>
+              <textarea name="body"></textarea>
+            </div>
+            <input type="hidden" name="res_id" value={s.id} />
+            <div className="res-form-buttons">
+              <button type="submit" className="btn btn-small">
+                {term(settings, "post_res")}
+              </button>
+              <label className="photo-button">
+                {term(settings, "attach_photo")}
+                <input type="file" name="photo" accept="image/*" multiple />
+              </label>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   );
@@ -162,7 +180,7 @@ export const StatementList: FC<{
   </div>
 );
 
-/** 投稿フォーム（元の index の .new-post に相当）。写真添付・スタンプ・レス指定を持つ。 */
+/** 投稿フォーム（元の index の .new-post に相当）。写真添付・スタンプを持つ。 */
 export const PostForm: FC<{ settings: MassrSettings }> = ({ settings }) => (
   <div className="new-post">
     <form
@@ -172,13 +190,6 @@ export const PostForm: FC<{ settings: MassrSettings }> = ({ settings }) => (
       method="post"
       enctype="multipart/form-data"
     >
-      <div id="res-banner" className="alert alert-info" style="display:none">
-        <span id="res-banner-text"></span>
-        <button type="button" id="res-cancel" className="close">
-          ×
-        </button>
-      </div>
-      <input type="hidden" name="res_id" id="res-id-input" value="" />
       <input type="hidden" name="stamp" id="stamp-url-input" value="" />
       <input type="hidden" name="stamp_id" id="stamp-id-input" value="" />
       <div>

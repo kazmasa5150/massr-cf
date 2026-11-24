@@ -67,30 +67,19 @@
     });
   });
 
-  // レス先の指定: 投稿フォームの hidden input とバナーを切り替える。
-  var resInput = document.getElementById("res-id-input");
-  var resBanner = document.getElementById("res-banner");
-  var resBannerText = document.getElementById("res-banner-text");
-  var resCancel = document.getElementById("res-cancel");
-  if (resInput && resBanner && resCancel) {
-    document.querySelectorAll("[data-res-btn]").forEach(function (btn) {
-      btn.addEventListener("click", function () {
-        resInput.value = btn.getAttribute("data-res-btn") || "";
-        if (resBannerText) {
-          resBannerText.textContent =
-            "レス先: " + (btn.getAttribute("data-res-label") || "");
-        }
-        resBanner.style.display = "";
-        var textarea = document.querySelector(".post-form textarea");
-        if (textarea) textarea.focus();
-        window.scrollTo(0, 0);
-      });
+  // レスフォーム: レスボタンで、その発言の下の入力欄を開閉する（元の slideToggle 相当）。
+  document.querySelectorAll("[data-res-btn]").forEach(function (btn) {
+    btn.addEventListener("click", function (e) {
+      e.preventDefault();
+      var box = document.getElementById("res-form-" + btn.getAttribute("data-res-btn"));
+      if (!box) return;
+      box.hidden = !box.hidden;
+      if (!box.hidden) {
+        var ta = box.querySelector("textarea");
+        if (ta) ta.focus();
+      }
     });
-    resCancel.addEventListener("click", function () {
-      resInput.value = "";
-      resBanner.style.display = "none";
-    });
-  }
+  });
 
   // レス新着バッジのポーリング（元の 30 秒間隔に合わせる）。
   var badge = document.getElementById("res-badge");
