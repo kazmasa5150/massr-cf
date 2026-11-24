@@ -37,10 +37,22 @@ npm run dev                # wrangler dev（http://localhost:8787）
 
 - Phase 0: 基盤（雛形、D1 スキーマ、設定読み込み、プラグイン基盤、Access 連携、共通レイアウト）— 完了
 - Phase 1: コア（登録・認可フロー、タイムライン、投稿、イイネ、レス、ユーザーページ群、写真）— 完了
-- Phase 2: 周辺（検索、スタンプ、管理画面の拡充、notify / icon プラグイン）← 次
-- Phase 3: 任意（メール通知ほか）
+- Phase 2: 周辺（検索とピン留め、スタンプ、写真・liked・likes ページ、管理画面、notify/information・notify/like・icon/rotate プラグイン）— 完了
+- Phase 3: 任意（メール通知ほか）← 次
 
-動作確認用のスモークテストが `smoke-test.sh` にあります（`npm run dev` で起動した状態で実行）。
+動作確認用のスモークテストが `smoke-test.sh`（Phase 1）と `smoke-test-phase2.sh`（Phase 2）にあります（`npm run dev` で起動した状態で実行）。
+
+## プラグインの有効化
+
+プラグインは設定 JSON の `plugin` セクションで有効化します（元の Massr と同じ書式）。開発時は `.dev.vars` に `MASSR_SETTINGS_JSON` を書くと差分マージされます。
+
+```
+MASSR_SETTINGS_JSON={"plugin":{"notify/information news":{"message":"お知らせ文"},"notify/like party":{"label":"参加しますか？","delete":"any"},"icon/rotate":{}}}
+```
+
+- `notify/information <ラベル>`: お知らせ欄に `message` を表示する
+- `notify/like <ラベル>`: 全体イイネ（出欠確認など）。`delete` は `owner`（自分の分だけ取消可）か `any`（誰の分でも取消可）
+- `icon/rotate`: サイトアイコンのディレクトリを現在月に切り替える（画像は `public/img/<MM>/` に配置）
 
 移植計画の詳細は別途「Massr 移植計画書」を参照してください。
 

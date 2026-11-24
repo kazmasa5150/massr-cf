@@ -1,5 +1,5 @@
 import type { FC } from "hono/jsx";
-import { term, type MassrSettings } from "../settings";
+import { iconDir, term, type MassrSettings } from "../settings";
 import {
   STATUS,
   userToHash,
@@ -22,15 +22,25 @@ function layoutUser(me: UserRow | null): LayoutUser | null {
 /* ---------- タイムライン ---------- */
 
 export const TimelinePage: FC<
-  PageProps & { statements: StatementHash[]; nextCursor: string | null }
-> = ({ settings, me, resSize, statements, nextCursor }) => (
+  PageProps & {
+    statements: StatementHash[];
+    nextCursor: string | null;
+    notifyHtml?: string[];
+  }
+> = ({ settings, me, resSize, statements, nextCursor, notifyHtml }) => (
   <Layout
     title={term(settings, "site_name")}
     settings={settings}
     me={layoutUser(me)}
     resSize={resSize}
   >
-    {/* お知らせ欄（notify プラグイン）は Phase 2 でここに差し込む */}
+    {notifyHtml && notifyHtml.length > 0 && (
+      <div className="notify-area">
+        {notifyHtml.map((html) => (
+          <div className="notify-item" dangerouslySetInnerHTML={{ __html: html }} />
+        ))}
+      </div>
+    )}
     <PostForm settings={settings} />
     <StatementList statements={statements} settings={settings} meMassrId={me?.massr_id ?? ""} />
     {nextCursor && (
@@ -159,17 +169,18 @@ function statusLabel(settings: MassrSettings, status: number): string {
 }
 
 export const UsersPage: FC<
-  PageProps & { users: UserRow[]; unauthCount: number }
-> = ({ settings, me, resSize, users, unauthCount }) => {
+  PageProps & { users: UserRow[]; unauthCount: number; headingKey?: string }
+> = ({ settings, me, resSize, users, unauthCount, headingKey }) => {
   const iAmAdmin = me?.status === STATUS.ADMIN;
+  const heading = term(settings, headingKey ?? "member");
   return (
     <Layout
-      title={`${term(settings, "member")} - ${term(settings, "site_name")}`}
+      title={`${heading} - ${term(settings, "site_name")}`}
       settings={settings}
       me={layoutUser(me)}
       resSize={resSize}
     >
-      <h1>{term(settings, "member")}</h1>
+      <h1>{heading}</h1>
       {iAmAdmin && unauthCount > 0 && (
         <p className="notice">{term(settings, "unauth_count", unauthCount)}</p>
       )}
@@ -238,6 +249,11 @@ export const UsersPage: FC<
 export const LoginPage: FC<{ settings: MassrSettings }> = ({ settings }) => (
   <Layout title={term(settings, "site_name")} settings={settings} me={null}>
     <h1>{term(settings, "site_name")}</h1>
+    <img
+      className="masao-img"
+      src={`/img/${iconDir(settings)}/masao.jpg`}
+      alt=""
+    />
     <p>{term(settings, "need_login")}</p>
     <p className="note">
       このサイトは Cloudflare Access で保護されています。許可されたメールアドレスで
@@ -255,5 +271,120 @@ export const UnauthorizedPage: FC<PageProps> = ({ settings, me }) => (
   >
     <h1>{term(settings, "site_name")}</h1>
     <p>{term(settings, "unauthorized")}</p>
+  </Layout>
+);
+
+/* ---------- 検索 ---------- */
+
+export const SearchPage: FC<
+  PageProps & {
+    q: string;
+    statements: StatementHash[];
+    pins: { word: string; label: string }[];
+    nextCursor: string | null;
+  }
+> = ({ settings, me, resSize, q, statements, pins, nextCursor }) => (
+  <Layout
+    title={`${term(settings, "search")}: ${q} - ${term(settings, "site_name")}`}
+    settings={settings}
+    me={layoutUser(me)}
+    resSize={resSize}
+  >
+    <h1>
+      {term(settings, "search")}: {q}
+    </h1>
+    <div className="search-pins">
+      {pins.map((pin) => (
+        <span className="pin">
+          <a href={`/search?q=${encodeURIComponent(pin.word)}`}>{pin.label}</a>
+          <button type="button" data-pin-delete={pin.word} title="ピンを外す">
+            ×
+          </button>
+        </span>
+      ))}
+      {!pins.some((p) => p.word === q) && (
+        <button type="button" data-pin-add={q}>
+          この検索をピン留め
+        </button>
+      )}
+    </div>
+    <StatementList statements={statements} settings={settings} meMassrId={me?.massr_id ?? ""} />
+    {nextCursor && (
+      <p className="pagination">
+        <a href={`/search?q=${encodeURIComponent(q)}&date=${nextCursor}`}>← older</a>
+      </p>
+    )}
+  </Layout>
+);
+
+/* ---------- 写真一覧 ---------- */
+
+export const PhotosPage: FC<
+  PageProps & {
+    title: string;
+    statements: StatementHash[];
+    nextCursor: string | null;
+    nextPath: string;
+  }
+> = ({ settings, me, resSize, title, statements, nextCursor, nextPath }) => (
+  <Layout title={title} settings={settings} me={layoutUser(me)} resSize={resSize}>
+    <h1>{term(settings, "photos")}</h1>
+    <div className="photo-grid">
+      {statements.flatMap((s) =>
+        s.photos.map((url) => (
+          <figure className="photo-cell">
+            <a href={`/statement/${s.id}`}>
+              <img src={url} alt={s.body ?? ""} />
+            </a>
+            <figcaption>
+              <a href={`/user/${s.user.massr_id}`}>{s.user.name}</a>
+              <span className="created-at">{s.created_at}</span>
+            </figcaption>
+          </figure>
+        )),
+      )}
+    </div>
+    {nextCursor && (
+      <p className="pagination">
+        <a href={`${nextPath}?date=${nextCursor}`}>← older</a>
+      </p>
+    )}
+  </Layout>
+);
+
+/* ---------- スタンプ一覧 ---------- */
+
+export const StampsPage: FC<
+  PageProps & { stamps: import("../models").StampHash[] }
+> = ({ settings, me, resSize, stamps }) => (
+  <Layout
+    title={`${term(settings, "stamps")} - ${term(settings, "site_name")}`}
+    settings={settings}
+    me={layoutUser(me)}
+    resSize={resSize}
+  >
+    <h1>{term(settings, "stamps")}</h1>
+    <div className="stamp-grid">
+      {stamps.map((stamp) => (
+        <figure className="stamp-cell">
+          <img src={stamp.image_url} alt={stamp.tag ?? "stamp"} />
+          <figcaption>
+            <span className="stamp-popular">★{stamp.popular}</span>
+            {stamp.original && (
+              <a href={`/statement/${stamp.original.id}`}>元の発言</a>
+            )}
+            <form className="stamp-tag-form" data-stamp-tag-form={stamp.id}>
+              <input type="text" name="tag" value={stamp.tag ?? ""} placeholder="タグ" />
+              <button type="submit">タグ保存</button>
+            </form>
+            <form method="post" action="/stamp">
+              <input type="hidden" name="_method" value="delete" />
+              <input type="hidden" name="image_url" value={stamp.image_url} />
+              <button type="submit">{term(settings, "unuse_stamp")}</button>
+            </form>
+          </figcaption>
+        </figure>
+      ))}
+    </div>
   </Layout>
 );

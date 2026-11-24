@@ -2,15 +2,20 @@ import { Hono } from "hono";
 import type { Context } from "hono";
 import type { AppEnv } from "../types";
 import {
+  PAGE_LIMIT,
   addLike,
   countResNotifications,
   createStatement,
+  cursorOf,
   deleteStatement,
   getStatementById,
+  getStatements,
+  parseDateCursor,
   removeLike,
   statementToHash,
 } from "../models";
-import { StatementPage } from "../views/pages";
+import { term } from "../settings";
+import { PhotosPage, StatementPage } from "../views/pages";
 
 const app = new Hono<AppEnv>();
 
@@ -77,6 +82,39 @@ async function postStatement(c: Context<AppEnv>, format: "html" | "json") {
 
 app.post("/statement", (c) => postStatement(c, "html"));
 app.post("/statement.json", (c) => postStatement(c, "json"));
+
+/** 全員の写真一覧（元の GET /statement/photos(.json)）。:id より先に登録する。 */
+app.get("/statement/photos", async (c) => {
+  const me = c.get("currentUser")!;
+  const settings = c.get("settings");
+  const statements = await getStatements(c.env.DB, {
+    before: parseDateCursor(c.req.query("date")),
+    hasPhotos: true,
+  });
+  const nextCursor =
+    statements.length === PAGE_LIMIT
+      ? cursorOf(statements[statements.length - 1].row.created_at)
+      : null;
+  return c.html(
+    <PhotosPage
+      settings={settings}
+      me={me}
+      resSize={await countResNotifications(c.env.DB, me.id)}
+      title={term(settings, "all_photos")}
+      statements={statements.map(statementToHash)}
+      nextCursor={nextCursor}
+      nextPath="/statement/photos"
+    />,
+  );
+});
+
+app.get("/statement/photos.json", async (c) => {
+  const statements = await getStatements(c.env.DB, {
+    before: parseDateCursor(c.req.query("date")),
+    hasPhotos: true,
+  });
+  return c.json(statements.map(statementToHash));
+});
 
 function parseIdParam(raw: string): { id: number; json: boolean } {
   const json = raw.endsWith(".json");

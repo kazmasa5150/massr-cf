@@ -365,6 +365,12 @@ export interface StatementQuery {
   userId?: number;
   hasPhotos?: boolean;
   onlyIds?: number[];
+  /** そのユーザがイイネした発言のみ（元の likes ページ）。 */
+  likedBy?: number;
+  /** イイネが付いている発言のみ（元の liked ページ）。 */
+  hasLikes?: boolean;
+  /** 本文の部分一致検索（元の正規表現検索を LIKE で代替）。 */
+  search?: string;
 }
 
 /** 元の get_statements: created_at < date の新しい順に $limit 件。 */
@@ -380,6 +386,17 @@ export async function getStatements(
   }
   if (q.hasPhotos) {
     where.push("EXISTS (SELECT 1 FROM statement_photos p WHERE p.statement_id = s.id)");
+  }
+  if (q.hasLikes) {
+    where.push("EXISTS (SELECT 1 FROM likes l WHERE l.statement_id = s.id)");
+  }
+  if (q.likedBy !== undefined) {
+    where.push("EXISTS (SELECT 1 FROM likes l WHERE l.statement_id = s.id AND l.user_id = ?)");
+    binds.push(q.likedBy);
+  }
+  if (q.search) {
+    where.push("s.body LIKE ? ESCAPE '\\'");
+    binds.push(`%${q.search.replace(/[\\%_]/g, (ch) => `\\${ch}`)}%`);
   }
   if (q.onlyIds) {
     if (q.onlyIds.length === 0) return [];
@@ -543,4 +560,231 @@ export async function getRepliesToUser(
     .bind(userId, before)
     .all<StatementRow>();
   return hydrate(db, results);
+}
+
+/* ---------- 検索ピン（元の SearchPin） ---------- */
+
+export interface SearchPinRow {
+  word: string;
+  label: string;
+}
+
+export async function listSearchPins(db: D1Database): Promise<SearchPinRow[]> {
+  const { results } = await db
+    .prepare("SELECT word, label FROM search_pins ORDER BY word")
+    .all<SearchPinRow>();
+  return results;
+}
+
+/** ピンを作る。word が重複したら null（元の 409 相当）。label 省略時は word と同じ。 */
+export async function createSearchPin(
+  db: D1Database,
+  word: string,
+  label: string | null,
+): Promise<SearchPinRow | null> {
+  const res = await db
+    .prepare("INSERT OR IGNORE INTO search_pins (word, label) VALUES (?, ?)")
+    .bind(word, label ?? word)
+    .run();
+  if (res.meta.changes === 0) return null;
+  return { word, label: label ?? word };
+}
+
+export async function updateSearchPinLabel(
+  db: D1Database,
+  word: string,
+  label: string,
+): Promise<SearchPinRow | null> {
+  const res = await db
+    .prepare("UPDATE search_pins SET label = ? WHERE word = ?")
+    .bind(label, word)
+    .run();
+  if (res.meta.changes === 0) return null;
+  return { word, label };
+}
+
+export async function deleteSearchPin(
+  db: D1Database,
+  word: string,
+): Promise<SearchPinRow | null> {
+  const pin = await db
+    .prepare("SELECT word, label FROM search_pins WHERE word = ?")
+    .bind(word)
+    .first<SearchPinRow>();
+  if (!pin) return null;
+  await db.prepare("DELETE FROM search_pins WHERE word = ?").bind(word).run();
+  return pin;
+}
+
+/* ---------- スタンプ（元の Stamp） ---------- */
+
+export interface StampRow {
+  id: number;
+  image_url: string;
+  popular: number;
+  tag: string | null;
+  original_statement_id: number | null;
+  created_at: number;
+  updated_at: number;
+}
+
+export interface StampHash {
+  id: string;
+  created_at: string;
+  image_url: string;
+  tag: string | null;
+  popular: number;
+  original: StatementHash | null;
+}
+
+export async function stampToHash(
+  db: D1Database,
+  stamp: StampRow,
+): Promise<StampHash> {
+  let original: StatementHash | null = null;
+  if (stamp.original_statement_id !== null) {
+    const stmt = await getStatementById(db, stamp.original_statement_id);
+    original = stmt ? statementToHash(stmt) : null;
+  }
+  return {
+    id: String(stamp.id),
+    created_at: formatJst(stamp.created_at),
+    image_url: stamp.image_url,
+    tag: stamp.tag,
+    popular: stamp.popular,
+    original,
+  };
+}
+
+/**
+ * スタンプ一覧（popular 降順）。元の get_stamps と同様、
+ * 元発言が消えているスタンプは掃除して返さない。
+ */
+export async function listStamps(db: D1Database): Promise<StampRow[]> {
+  const { results } = await db
+    .prepare("SELECT * FROM stamps ORDER BY popular DESC, id ASC")
+    .all<StampRow>();
+  const alive: StampRow[] = [];
+  for (const stamp of results) {
+    if (stamp.original_statement_id !== null) {
+      const exists = await db
+        .prepare("SELECT id FROM statements WHERE id = ?")
+        .bind(stamp.original_statement_id)
+        .first();
+      if (!exists) {
+        await db.prepare("DELETE FROM stamps WHERE id = ?").bind(stamp.id).run();
+        continue;
+      }
+    }
+    alive.push(stamp);
+  }
+  return alive;
+}
+
+export async function getStampById(
+  db: D1Database,
+  id: number,
+): Promise<StampRow | null> {
+  return (
+    (await db
+      .prepare("SELECT * FROM stamps WHERE id = ?")
+      .bind(id)
+      .first<StampRow>()) ?? null
+  );
+}
+
+/** 写真をスタンプに登録する（image_url が一意。既存ならそれを返す）。 */
+export async function createStamp(
+  db: D1Database,
+  imageUrl: string,
+  statementId: number,
+): Promise<StampRow> {
+  const now = Math.floor(Date.now() / 1000);
+  await db
+    .prepare(
+      "INSERT OR IGNORE INTO stamps (image_url, popular, tag, original_statement_id, created_at, updated_at) VALUES (?, 0, NULL, ?, ?, ?)",
+    )
+    .bind(imageUrl, statementId, now, now)
+    .run();
+  const stamp = await db
+    .prepare("SELECT * FROM stamps WHERE image_url = ?")
+    .bind(imageUrl)
+    .first<StampRow>();
+  if (!stamp) throw new Error("createStamp failed");
+  return stamp;
+}
+
+export async function deleteStampByUrl(
+  db: D1Database,
+  imageUrl: string,
+): Promise<void> {
+  await db.prepare("DELETE FROM stamps WHERE image_url = ?").bind(imageUrl).run();
+}
+
+export async function updateStampTag(
+  db: D1Database,
+  id: number,
+  tag: string,
+): Promise<StampRow | null> {
+  const now = Math.floor(Date.now() / 1000);
+  const res = await db
+    .prepare("UPDATE stamps SET tag = ?, updated_at = ? WHERE id = ?")
+    .bind(tag, now, id)
+    .run();
+  if (res.meta.changes === 0) return null;
+  return getStampById(db, id);
+}
+
+/* ---------- プラグイン設定（元の PluginSetting） ---------- */
+
+export async function getPluginSetting(
+  db: D1Database,
+  plugin: string,
+  key: string,
+): Promise<string | null> {
+  const row = await db
+    .prepare("SELECT value FROM plugin_settings WHERE plugin = ? AND key = ?")
+    .bind(plugin, key)
+    .first<{ value: string }>();
+  return row?.value ?? null;
+}
+
+export async function setPluginSetting(
+  db: D1Database,
+  plugin: string,
+  key: string,
+  value: string,
+): Promise<void> {
+  await db
+    .prepare(
+      "INSERT INTO plugin_settings (plugin, key, value) VALUES (?, ?, ?) ON CONFLICT(plugin, key) DO UPDATE SET value = excluded.value",
+    )
+    .bind(plugin, key, value)
+    .run();
+}
+
+/* ---------- notify/like プラグインの状態 ---------- */
+
+/** { massr_id: [icon_url_http, icon_url_https] } の形（元の保存形式）。 */
+export type NotifyLikeMap = Record<string, [string, string]>;
+
+export async function getNotifyLikeMap(
+  db: D1Database,
+  instanceId: string,
+): Promise<NotifyLikeMap> {
+  const raw = await getPluginSetting(db, "notify/like", instanceId);
+  if (!raw) return {};
+  try {
+    return JSON.parse(raw) as NotifyLikeMap;
+  } catch {
+    return {};
+  }
+}
+
+export async function setNotifyLikeMap(
+  db: D1Database,
+  instanceId: string,
+  map: NotifyLikeMap,
+): Promise<void> {
+  await setPluginSetting(db, "notify/like", instanceId, JSON.stringify(map));
 }

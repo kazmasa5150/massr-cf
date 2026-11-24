@@ -1,6 +1,6 @@
 #!/bin/bash
 # massr-cf Phase 1 smoke test against wrangler dev on :8799
-B=http://localhost:8799
+B=${MASSR_BASE:-http://localhost:8799}
 A=(-H 'x-dev-email: alice@example.com')
 BOB=(-H 'x-dev-email: bob@example.com')
 pass=0; fail=0

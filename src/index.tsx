@@ -9,6 +9,9 @@ import { STATUS, getUserByEmail } from "./models";
 import mainRoutes from "./routes/main";
 import statementRoutes from "./routes/statements";
 import userRoutes from "./routes/users";
+import searchRoutes from "./routes/search";
+import stampRoutes from "./routes/stamps";
+import pluginRoutes from "./routes/plugins";
 
 const app = new Hono<AppEnv>();
 
@@ -16,11 +19,13 @@ const app = new Hono<AppEnv>();
 // 現在のユーザ（users テーブル）の解決。
 app.use("*", async (c, next) => {
   const settings = loadSettings(c.env);
+  const plugins = loadPlugins(settings, { env: c.env, settings, db: c.env.DB });
+  // icon プラグイン（icon/rotate 等）があれば icon_dir を差し替える（元の helper 上書きに相当）。
+  if (plugins.icon.length > 0) {
+    settings.resource.icon_dir = plugins.icon[0].iconDir(new Date());
+  }
   c.set("settings", settings);
-  c.set(
-    "plugins",
-    loadPlugins(settings, { env: c.env, settings, db: c.env.DB }),
-  );
+  c.set("plugins", plugins);
   const email = resolveAccessEmail(c);
   c.set("accessEmail", email);
   c.set("currentUser", email ? await getUserByEmail(c.env.DB, email) : null);
@@ -76,6 +81,9 @@ app.get("/__health", async (c) => {
 app.route("/", mainRoutes);
 app.route("/", statementRoutes);
 app.route("/", userRoutes);
+app.route("/", searchRoutes);
+app.route("/", stampRoutes);
+app.route("/", pluginRoutes);
 
 export type { Env };
 export default app;

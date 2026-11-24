@@ -39,6 +39,9 @@ app.get("/", async (c) => {
     before: parseDateCursor(c.req.query("date")),
   });
   const resSize = await countResNotifications(c.env.DB, me.id);
+  const notifyHtml = (
+    await Promise.all(c.get("plugins").notify.map((p) => p.render()))
+  ).filter((html) => html.length > 0);
   const nextCursor =
     statements.length === PAGE_LIMIT
       ? cursorOf(statements[statements.length - 1].row.created_at)
@@ -50,6 +53,7 @@ app.get("/", async (c) => {
       resSize={resSize}
       statements={statements.map(statementToHash)}
       nextCursor={nextCursor}
+      notifyHtml={notifyHtml}
     />,
   );
 });

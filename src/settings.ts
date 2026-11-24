@@ -26,22 +26,24 @@ const baseSettings = defaultSettingsJson as MassrSettings;
 export function loadSettings(env: {
   MASSR_SETTINGS_JSON?: string;
 }): MassrSettings {
-  if (!env.MASSR_SETTINGS_JSON) return baseSettings;
+  // 常にコピーを返す（icon プラグインが resource.icon_dir を差し替えるため、
+  // 共有オブジェクトを直接返すとリクエストを跨いで汚染される）。
+  const merged: MassrSettings = {
+    plugin: { ...baseSettings.plugin },
+    resource: { ...baseSettings.resource },
+    setting: { ...baseSettings.setting },
+    local: { ...baseSettings.local },
+  };
+  if (!env.MASSR_SETTINGS_JSON) return merged;
   try {
     const custom = JSON.parse(env.MASSR_SETTINGS_JSON) as Partial<MassrSettings>;
-    const merged: MassrSettings = {
-      plugin: { ...baseSettings.plugin },
-      resource: { ...baseSettings.resource },
-      setting: { ...baseSettings.setting },
-      local: { ...baseSettings.local },
-    };
     for (const key of ["plugin", "resource", "setting", "local"] as const) {
       if (custom[key]) Object.assign(merged[key], custom[key]);
     }
     return merged;
   } catch {
     console.warn("MASSR_SETTINGS_JSON is not valid JSON; using defaults.");
-    return baseSettings;
+    return merged;
   }
 }
 

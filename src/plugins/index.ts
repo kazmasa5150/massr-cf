@@ -1,4 +1,11 @@
-import { registerPlugin, type CachePlugin, type MediaPlugin } from "./registry";
+import {
+  registerPlugin,
+  type CachePlugin,
+  type IconPlugin,
+  type MediaPlugin,
+  type NotifyPlugin,
+} from "./registry";
+import { getNotifyLikeMap } from "../models";
 
 /**
  * 組み込みプラグインの登録。
@@ -45,7 +52,62 @@ registerPlugin("media/cloudflare", (info, _opts, ctx): MediaPlugin => ({
   },
 }));
 
-// Phase 2 で追加予定:
-// - notify/information（お知らせ欄の固定文）
-// - notify/like（全体イイネ）
-// - icon/rotate（月替わりアイコン）
+/**
+ * お知らせ欄の固定文（元の notify/information）。
+ * 設定例: "notify/information news": { "message": "お知らせ文" }
+ * ラベルがインスタンス ID になる。
+ */
+registerPlugin("notify/information", (info, opts): NotifyPlugin => ({
+  ...info,
+  genre: "notify",
+  render() {
+    const message = opts["message"];
+    return typeof message === "string" ? message : "";
+  },
+}));
+
+/**
+ * 全体イイネ（元の notify/like）。出欠確認のような使い方をする。
+ * 設定例: "notify/like party": { "label": "参加しますか？", "delete": "owner" }
+ * delete は "owner"（自分の分だけ取消可）か "any"（誰の分でも取消可）。
+ * 状態は plugin_settings に元の JSON 形式で保存する。
+ */
+registerPlugin("notify/like", (info, opts, ctx): NotifyPlugin => {
+  const instanceId = info.label || "like";
+  const labelText = typeof opts["label"] === "string" ? opts["label"] : "";
+  const deleteMode = opts["delete"] === "any" ? "any" : "owner";
+  return {
+    ...info,
+    genre: "notify",
+    async render() {
+      const likes = await getNotifyLikeMap(ctx.db, instanceId);
+      const icons = Object.entries(likes)
+        .map(([user, [, https]]) =>
+          deleteMode === "any"
+            ? `<a href="#" data-notify-like-delete="${instanceId}" data-user="${user}"><img class="liker-icon" src="${https}" alt="${user}" title="delete ${user}"></a>`
+            : `<img class="liker-icon" src="${https}" alt="${user}">`,
+        )
+        .join("");
+      return (
+        `<div class="notify-like" data-notify-like="${instanceId}">` +
+        `<span class="notify-like-label">${labelText}</span> ` +
+        `<span class="notify-like-icons">${icons}</span> ` +
+        `<button type="button" data-notify-like-add="${instanceId}">わかるわ</button> ` +
+        `<button type="button" data-notify-like-remove="${instanceId}">わからないわ</button>` +
+        `</div>`
+      );
+    },
+  };
+});
+
+/**
+ * 月替わりアイコン（元の icon/rotate）。
+ * icon_dir を現在月（"01"〜"12"）に差し替える。画像は public/img/<月>/ に置く。
+ */
+registerPlugin("icon/rotate", (info): IconPlugin => ({
+  ...info,
+  genre: "icon",
+  iconDir(now: Date) {
+    return String(now.getMonth() + 1).padStart(2, "0");
+  },
+}));

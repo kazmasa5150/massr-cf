@@ -67,13 +67,23 @@ export const StatementItem: FC<{
       )}
 
       {s.photos.length > 0 && (
-        <p className="statement-photos">
+        <div className="statement-photos">
           {s.photos.map((url) => (
-            <a href={url}>
-              <img src={url} alt="photo" />
-            </a>
+            <p>
+              <a href={url}>
+                <img src={url} alt="photo" />
+              </a>
+              <button
+                type="button"
+                className="stamp-add-btn"
+                data-stamp-add={s.id}
+                data-image-url={url}
+              >
+                {term(settings, "use_stamp")}
+              </button>
+            </p>
           ))}
-        </p>
+        </div>
       )}
 
       <div className="statement-actions">
@@ -142,12 +152,24 @@ export const PostForm: FC<{ settings: MassrSettings }> = ({ settings }) => (
       </button>
     </div>
     <input type="hidden" name="res_id" id="res-id-input" value="" />
+    <input type="hidden" name="stamp" id="stamp-url-input" value="" />
+    <input type="hidden" name="stamp_id" id="stamp-id-input" value="" />
     <textarea name="body" rows={3} placeholder=""></textarea>
+    <div id="stamp-preview" className="stamp-preview" style="display:none">
+      <img id="stamp-preview-img" src="" alt="stamp" />
+      <button type="button" id="stamp-clear">
+        ×
+      </button>
+    </div>
+    <div id="stamp-tray" className="stamp-tray" style="display:none"></div>
     <div className="post-form-row">
       <label>
         {term(settings, "attach_photo")}
         <input type="file" name="photo" accept="image/*" />
       </label>
+      <button type="button" id="stamp-toggle">
+        {term(settings, "attach_stamp")}
+      </button>
       <button type="submit">{term(settings, "post")}</button>
     </div>
   </form>

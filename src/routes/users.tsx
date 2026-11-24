@@ -19,7 +19,8 @@ import {
   statementToHash,
   updateUserProfile,
 } from "../models";
-import { UserFormPage, UserStatementsPage, UsersPage } from "../views/pages";
+import { term } from "../settings";
+import { PhotosPage, UserFormPage, UserStatementsPage, UsersPage } from "../views/pages";
 
 const app = new Hono<AppEnv>();
 
@@ -149,9 +150,8 @@ app.get("/user/:massr_id", async (c) => {
 });
 
 /** 自分（プロフィール主）の発言へのレス一覧。開くと自分の新着通知をクリアする（元の仕様）。 */
-app.get("/user/:massr_id/res", async (c) => {
-  const { key, json } = splitJsonSuffix(c.req.param("massr_id"));
-  const profile = await getUserByMassrId(c.env.DB, key);
+async function userResPage(c: Context<AppEnv>, json: boolean) {
+  const profile = await getUserByMassrId(c.env.DB, c.req.param("massr_id") ?? "");
   if (!profile) return c.notFound();
   const me = c.get("currentUser")!;
   const pendingIds = await listResNotificationIds(c.env.DB, me.id);
@@ -177,6 +177,94 @@ app.get("/user/:massr_id/res", async (c) => {
       nextPath={`/user/${profile.massr_id}/res`}
       highlightIds={new Set(pendingIds.map(String))}
       heading={`${profile.name}へのレス`}
+    />,
+  );
+}
+
+app.get("/user/:massr_id/res", (c) => userResPage(c, false));
+app.get("/user/:massr_id/res.json", (c) => userResPage(c, true));
+
+/* ---------- 写真 / liked / likes ページ（元の user_photos 等） ---------- */
+
+async function userListPage(
+  c: Context<AppEnv>,
+  json: boolean,
+  kind: "photos" | "liked" | "likes",
+) {
+  const profile = await getUserByMassrId(c.env.DB, c.req.param("massr_id") ?? "");
+  if (!profile) return c.notFound();
+  const before = parseDateCursor(c.req.query("date"));
+  const query =
+    kind === "photos"
+      ? { before, userId: profile.id, hasPhotos: true }
+      : kind === "liked"
+        ? { before, userId: profile.id, hasLikes: true }
+        : { before, likedBy: profile.id };
+  const statements = await getStatements(c.env.DB, query);
+  if (json) return c.json(statements.map(statementToHash));
+  const me = c.get("currentUser")!;
+  const settings = c.get("settings");
+  const resSize = await countResNotifications(c.env.DB, me.id);
+  if (kind === "photos") {
+    const nextCursor =
+      statements.length === PAGE_LIMIT
+        ? cursorOf(statements[statements.length - 1].row.created_at)
+        : null;
+    return c.html(
+      <PhotosPage
+        settings={settings}
+        me={me}
+        resSize={resSize}
+        title={`${profile.name} - ${term(settings, "photos")}`}
+        statements={statements.map(statementToHash)}
+        nextCursor={nextCursor}
+        nextPath={`/user/${profile.massr_id}/photos`}
+      />,
+    );
+  }
+  const nextCursor =
+    statements.length === PAGE_LIMIT
+      ? cursorOf(statements[statements.length - 1].row.created_at)
+      : null;
+  return c.html(
+    <UserStatementsPage
+      settings={settings}
+      me={me}
+      resSize={resSize}
+      profile={profile}
+      statements={statements.map(statementToHash)}
+      nextCursor={nextCursor}
+      nextPath={`/user/${profile.massr_id}/${kind}`}
+      heading={
+        kind === "liked"
+          ? `${profile.name}の${term(settings, "liked")}`
+          : `${profile.name}の${term(settings, "likes")}`
+      }
+    />,
+  );
+}
+
+app.get("/user/:massr_id/photos", (c) => userListPage(c, false, "photos"));
+app.get("/user/:massr_id/photos.json", (c) => userListPage(c, true, "photos"));
+app.get("/user/:massr_id/liked", (c) => userListPage(c, false, "liked"));
+app.get("/user/:massr_id/liked.json", (c) => userListPage(c, true, "liked"));
+app.get("/user/:massr_id/likes", (c) => userListPage(c, false, "likes"));
+app.get("/user/:massr_id/likes.json", (c) => userListPage(c, true, "likes"));
+
+/* ---------- 管理画面（元の /admin。管理者のみ、自分以外の一覧） ---------- */
+
+app.get("/admin", async (c) => {
+  const me = c.get("currentUser")!;
+  if (me.status !== STATUS.ADMIN) return c.redirect("/");
+  const users = (await listUsers(c.env.DB)).filter((u) => u.id !== me.id);
+  return c.html(
+    <UsersPage
+      settings={c.get("settings")}
+      me={me}
+      resSize={await countResNotifications(c.env.DB, me.id)}
+      users={users}
+      unauthCount={users.filter((u) => u.status === STATUS.UNAUTHORIZED).length}
+      headingKey="admin_menu"
     />,
   );
 });

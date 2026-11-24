@@ -36,6 +36,8 @@ export const Layout: FC<
           {me && (
             <nav className="site-nav">
               <a href="/users.html">{term(settings, "member")}</a>
+              <a href="/statement/photos">{term(settings, "photos")}</a>
+              <a href="/stamps">{term(settings, "stamps")}</a>
               <a href="/user">{term(settings, "settings")}</a>
               <a href={`/user/${me.massr_id}/res`}>
                 {term(settings, "res")}
@@ -48,6 +50,9 @@ export const Layout: FC<
                 </span>
               </a>
               <a href="/logout">{term(settings, "logout")}</a>
+              <form className="search-form" action="/search" method="get">
+                <input type="search" name="q" placeholder={term(settings, "search")} />
+              </form>
             </nav>
           )}
         </header>

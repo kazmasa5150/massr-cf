@@ -94,4 +94,179 @@
         .catch(function () {});
     }, 30000);
   }
+
+  // 写真をスタンプに登録する。
+  document.querySelectorAll("[data-stamp-add]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var form = new FormData();
+      form.append("image_url", btn.getAttribute("data-image-url") || "");
+      form.append("statement_id", btn.getAttribute("data-stamp-add") || "");
+      fetch("/stamp", { method: "POST", body: form })
+        .then(function (res) {
+          if (res.ok) {
+            btn.textContent = "登録済み";
+            btn.disabled = true;
+          }
+        })
+        .catch(function () {});
+    });
+  });
+
+  // スタンプトレイ（投稿フォーム）。
+  var stampToggle = document.getElementById("stamp-toggle");
+  var stampTray = document.getElementById("stamp-tray");
+  var stampUrlInput = document.getElementById("stamp-url-input");
+  var stampIdInput = document.getElementById("stamp-id-input");
+  var stampPreview = document.getElementById("stamp-preview");
+  var stampPreviewImg = document.getElementById("stamp-preview-img");
+  var stampClear = document.getElementById("stamp-clear");
+  if (stampToggle && stampTray) {
+    var trayLoaded = false;
+    stampToggle.addEventListener("click", function () {
+      var show = stampTray.style.display === "none";
+      stampTray.style.display = show ? "" : "none";
+      if (show && !trayLoaded) {
+        trayLoaded = true;
+        fetch("/stamps.json")
+          .then(function (res) {
+            return res.json();
+          })
+          .then(function (stamps) {
+            stamps.forEach(function (stamp) {
+              var img = document.createElement("img");
+              img.src = stamp.image_url;
+              img.alt = stamp.tag || "stamp";
+              img.className = "stamp-thumb";
+              img.addEventListener("click", function () {
+                if (stampUrlInput) stampUrlInput.value = stamp.image_url;
+                if (stampIdInput) stampIdInput.value = stamp.id;
+                if (stampPreviewImg) stampPreviewImg.src = stamp.image_url;
+                if (stampPreview) stampPreview.style.display = "";
+                stampTray.style.display = "none";
+              });
+              stampTray.appendChild(img);
+            });
+          })
+          .catch(function () {});
+      }
+    });
+  }
+  if (stampClear) {
+    stampClear.addEventListener("click", function () {
+      if (stampUrlInput) stampUrlInput.value = "";
+      if (stampIdInput) stampIdInput.value = "";
+      if (stampPreview) stampPreview.style.display = "none";
+    });
+  }
+
+  // スタンプのタグ保存。
+  document.querySelectorAll("[data-stamp-tag-form]").forEach(function (form) {
+    form.addEventListener("submit", function (ev) {
+      ev.preventDefault();
+      var data = new FormData(form);
+      data.append("stamp_id", form.getAttribute("data-stamp-tag-form") || "");
+      fetch("/stamp/tag", { method: "POST", body: data })
+        .then(function (res) {
+          if (res.ok) window.alert("スタンプのタグを更新しました");
+        })
+        .catch(function () {});
+    });
+  });
+
+  // 検索ピンの追加・削除。
+  document.querySelectorAll("[data-pin-add]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var form = new FormData();
+      form.append("q", btn.getAttribute("data-pin-add") || "");
+      fetch("/search/pin", { method: "POST", body: form }).then(function () {
+        window.location.reload();
+      });
+    });
+  });
+  document.querySelectorAll("[data-pin-delete]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var form = new FormData();
+      form.append("q", btn.getAttribute("data-pin-delete") || "");
+      fetch("/search/pin", { method: "DELETE", body: form }).then(function () {
+        window.location.reload();
+      });
+    });
+  });
+
+  // 画像が無いマサオ等は隠す（icon プラグインの月替わり先に画像が無い場合）。
+  document.querySelectorAll("img.masao-img").forEach(function (img) {
+    img.addEventListener("error", function () {
+      img.remove();
+    });
+  });
+
+  // notify/like プラグイン（全体イイネ）。
+  function notifyLikeRenderIcons(name, map) {
+    var box = document.querySelector(
+      '[data-notify-like="' + name + '"] .notify-like-icons'
+    );
+    if (!box) return;
+    box.textContent = "";
+    Object.keys(map).forEach(function (user) {
+      var img = document.createElement("img");
+      img.className = "liker-icon";
+      img.src = map[user][1];
+      img.alt = user;
+      box.appendChild(img);
+    });
+  }
+  document.querySelectorAll("[data-notify-like-add]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var name = btn.getAttribute("data-notify-like-add") || "";
+      fetch("/plugin/notify/like/" + encodeURIComponent(name), { method: "POST" })
+        .then(function (res) {
+          return res.json();
+        })
+        .then(function (map) {
+          notifyLikeRenderIcons(name, map);
+        })
+        .catch(function () {});
+    });
+  });
+  document.querySelectorAll("[data-notify-like-remove]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var name = btn.getAttribute("data-notify-like-remove") || "";
+      var me = document.body.getAttribute("data-me") || "";
+      fetch(
+        "/plugin/notify/like/" +
+          encodeURIComponent(name) +
+          "/" +
+          encodeURIComponent(me),
+        { method: "DELETE" }
+      )
+        .then(function (res) {
+          return res.json();
+        })
+        .then(function (map) {
+          notifyLikeRenderIcons(name, map);
+        })
+        .catch(function () {});
+    });
+  });
+  document.querySelectorAll("[data-notify-like-delete]").forEach(function (link) {
+    link.addEventListener("click", function (ev) {
+      ev.preventDefault();
+      var name = link.getAttribute("data-notify-like-delete") || "";
+      var user = link.getAttribute("data-user") || "";
+      fetch(
+        "/plugin/notify/like/" +
+          encodeURIComponent(name) +
+          "/" +
+          encodeURIComponent(user),
+        { method: "DELETE" }
+      )
+        .then(function (res) {
+          return res.json();
+        })
+        .then(function (map) {
+          notifyLikeRenderIcons(name, map);
+        })
+        .catch(function () {});
+    });
+  });
 })();
