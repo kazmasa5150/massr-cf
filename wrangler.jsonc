@@ -1,0 +1,30 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "massr-cf",
+  "main": "src/index.tsx",
+  "compatibility_date": "2026-11-01",
+  // 静的ファイル（public/）は Workers Static Assets で配信し、
+  // 一致しないリクエストだけ Worker に回す。
+  "assets": {
+    "directory": "./public"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "massr-cf",
+      // 本番用 D1 を作成したら、発行された ID に差し替えること。
+      "database_id": "00000000-0000-0000-0000-000000000000",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "MEDIA",
+      "bucket_name": "massr-cf-media"
+    }
+  ],
+  "vars": {
+    // 本番デプロイ前に production 用の環境分割を行うこと（Phase 0 の便宜上の値）。
+    "ENVIRONMENT": "development"
+  }
+}
