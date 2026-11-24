@@ -121,4 +121,13 @@ check "5 uploads capped at 4 photos" "4" "$flen"
 top=$(curl -s "${A[@]}" $B/)
 contains "multi photos use square grid class" 'photos-count-3' "$top"
 
+# --- photo-only post (no body) ---
+imgonly=$(curl -s "${A[@]}" -F 'photo=@/tmp/test.png' $B/statement.json)
+il=$(printf '%s' "$imgonly" | json_get "len(d['photos'])")
+check "photo-only post is saved" "1" "$il"
+ib=$(printf '%s' "$imgonly" | json_get "d['body']")
+check "photo-only post has null body" "None" "$ib"
+code=$(curl -s -o /dev/null -w '%{http_code}' "${A[@]}" -X POST -d 'body=' $B/statement.json)
+check "empty post without photo is still 400" "400" "$code"
+
 echo "== RESULT: pass=$pass fail=$fail"

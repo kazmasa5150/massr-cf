@@ -67,8 +67,10 @@ async function postStatement(c: Context<AppEnv>, format: "html" | "json") {
   const resIdRaw = typeof form["res_id"] === "string" ? Number(form["res_id"]) : NaN;
   const resId = Number.isInteger(resIdRaw) && resIdRaw > 0 ? resIdRaw : null;
 
-  // 元の仕様: stamp が無ければ body が空の投稿は保存しない。
-  const shouldSave = stamp !== null ? stamp.length > 0 : bodyText.length > 0;
+  // 元の仕様は「stamp が無ければ body が空の投稿は保存しない」だったが、
+  // 写真だけの投稿もできるよう、写真があれば本文なしでも保存する。
+  const shouldSave =
+    stamp !== null ? stamp.length > 0 : bodyText.length > 0 || photos.length > 0;
   if (!shouldSave) {
     return format === "json"
       ? c.json({ error: "Please enter the body or stamp." }, 400)
