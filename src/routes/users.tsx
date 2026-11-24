@@ -20,7 +20,7 @@ import {
   updateUserProfile,
 } from "../models";
 import { term } from "../settings";
-import { PhotosPage, UserFormPage, UserStatementsPage, UsersPage } from "../views/pages";
+import { PhotosPage, UserFormPage, UserStatementsPage, UsersPage, toSidebarData } from "../views/pages";
 
 const app = new Hono<AppEnv>();
 
@@ -44,6 +44,7 @@ app.get("/users.html", async (c) => {
   const users = await listUsers(c.env.DB);
   return c.html(
     <UsersPage
+      sidebar={toSidebarData(c.get("sidebar"))}
       settings={c.get("settings")}
       me={me}
       resSize={await countResNotifications(c.env.DB, me.id)}
@@ -58,6 +59,7 @@ app.get("/users.html", async (c) => {
 app.get("/user", (c) => {
   return c.html(
     <UserFormPage
+      sidebar={toSidebarData(c.get("sidebar"))}
       settings={c.get("settings")}
       me={c.get("currentUser")}
       email={c.get("accessEmail") ?? ""}
@@ -87,6 +89,7 @@ app.post("/user", async (c) => {
   if (!MASSR_ID_PATTERN.test(massrId)) {
     return c.html(
       <UserFormPage
+      sidebar={toSidebarData(c.get("sidebar"))}
         settings={settings}
         me={null}
         email={email}
@@ -97,6 +100,7 @@ app.post("/user", async (c) => {
   if (await getUserByMassrId(c.env.DB, massrId)) {
     return c.html(
       <UserFormPage
+      sidebar={toSidebarData(c.get("sidebar"))}
         settings={settings}
         me={null}
         email={email}
@@ -137,6 +141,7 @@ app.get("/user/:massr_id", async (c) => {
       : null;
   return c.html(
     <UserStatementsPage
+      sidebar={toSidebarData(c.get("sidebar"))}
       settings={c.get("settings")}
       me={me}
       resSize={await countResNotifications(c.env.DB, me.id)}
@@ -168,6 +173,7 @@ async function userResPage(c: Context<AppEnv>, json: boolean) {
       : null;
   return c.html(
     <UserStatementsPage
+      sidebar={toSidebarData(c.get("sidebar"))}
       settings={c.get("settings")}
       me={me}
       resSize={0}
@@ -212,6 +218,7 @@ async function userListPage(
         : null;
     return c.html(
       <PhotosPage
+      sidebar={toSidebarData(c.get("sidebar"))}
         settings={settings}
         me={me}
         resSize={resSize}
@@ -228,6 +235,7 @@ async function userListPage(
       : null;
   return c.html(
     <UserStatementsPage
+      sidebar={toSidebarData(c.get("sidebar"))}
       settings={settings}
       me={me}
       resSize={resSize}
@@ -259,6 +267,7 @@ app.get("/admin", async (c) => {
   const users = (await listUsers(c.env.DB)).filter((u) => u.id !== me.id);
   return c.html(
     <UsersPage
+      sidebar={toSidebarData(c.get("sidebar"))}
       settings={c.get("settings")}
       me={me}
       resSize={await countResNotifications(c.env.DB, me.id)}

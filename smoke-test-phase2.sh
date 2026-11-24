@@ -88,6 +88,6 @@ case "$nl" in *'"bob"'*) echo "FAIL: notify like delete (any)"; fail=$((fail+1))
 # --- icon/rotate ---
 login=$(curl -s $B/login)
 month=$(date +%m)
-contains "login masao uses monthly icon dir" "/img/$month/masao.jpg" "$login"
+contains "login masao uses monthly icon dir" "/img/$month/masao_footer.jpg" "$login"
 
 echo "== RESULT: pass=$pass fail=$fail"

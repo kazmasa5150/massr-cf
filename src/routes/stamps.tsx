@@ -9,7 +9,7 @@ import {
   stampToHash,
   updateStampTag,
 } from "../models";
-import { StampsPage } from "../views/pages";
+import { StampsPage, toSidebarData } from "../views/pages";
 
 const app = new Hono<AppEnv>();
 
@@ -18,6 +18,7 @@ app.get("/stamps", async (c) => {
   const stamps = await listStamps(c.env.DB);
   return c.html(
     <StampsPage
+      sidebar={toSidebarData(c.get("sidebar"))}
       settings={c.get("settings")}
       me={me}
       resSize={await countResNotifications(c.env.DB, me.id)}

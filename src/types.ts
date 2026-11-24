@@ -9,6 +9,10 @@ export interface Variables {
   settings: MassrSettings;
   plugins: LoadedPlugins;
   currentUser: UserRow | null;
+  sidebar: {
+    pins: { word: string; label: string }[];
+    members: UserRow[];
+  } | null;
 }
 
 export interface AppEnv {

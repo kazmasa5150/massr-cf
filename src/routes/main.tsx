@@ -9,7 +9,7 @@ import {
   parseDateCursor,
   statementToHash,
 } from "../models";
-import { LoginPage, TimelinePage, UnauthorizedPage } from "../views/pages";
+import { LoginPage, TimelinePage, UnauthorizedPage, toSidebarData } from "../views/pages";
 
 const app = new Hono<AppEnv>();
 
@@ -54,6 +54,7 @@ app.get("/", async (c) => {
       statements={statements.map(statementToHash)}
       nextCursor={nextCursor}
       notifyHtml={notifyHtml}
+      sidebar={toSidebarData(c.get("sidebar"))}
     />,
   );
 });

@@ -6,17 +6,40 @@ import {
   type StatementHash,
   type UserRow,
 } from "../models";
-import { Layout, type LayoutUser } from "./layout";
+import { Layout, type LayoutUser, type SidebarData } from "./layout";
 import { PostForm, StatementItem, StatementList } from "./statement";
 
 interface PageProps {
   settings: MassrSettings;
   me: UserRow | null;
   resSize?: number;
+  sidebar?: SidebarData | null;
 }
 
 function layoutUser(me: UserRow | null): LayoutUser | null {
-  return me ? { massr_id: me.massr_id, name: me.name } : null;
+  if (!me) return null;
+  const hash = userToHash(me);
+  return {
+    massr_id: me.massr_id,
+    name: me.name,
+    iconUrl: hash.icon_url,
+    isAdmin: me.status === STATUS.ADMIN,
+  };
+}
+
+/** ミドルウェアが用意したサイドバー材料をビュー用に変換する。 */
+export function toSidebarData(
+  sidebar: { pins: { word: string; label: string }[]; members: UserRow[] } | null,
+): SidebarData | null {
+  if (!sidebar) return null;
+  return {
+    pins: sidebar.pins,
+    members: sidebar.members.map((m) => ({
+      massr_id: m.massr_id,
+      name: m.name,
+      icon_url: userToHash(m).icon_url,
+    })),
+  };
 }
 
 /* ---------- タイムライン ---------- */
@@ -27,19 +50,19 @@ export const TimelinePage: FC<
     nextCursor: string | null;
     notifyHtml?: string[];
   }
-> = ({ settings, me, resSize, statements, nextCursor, notifyHtml }) => (
+> = ({ settings, me, resSize, sidebar, statements, nextCursor, notifyHtml }) => (
   <Layout
     title={term(settings, "site_name")}
     settings={settings}
     me={layoutUser(me)}
-    resSize={resSize}
+    resSize={resSize} sidebar={sidebar}
   >
     {notifyHtml && notifyHtml.length > 0 && (
-      <div className="notify-area">
+      <>
         {notifyHtml.map((html) => (
-          <div className="notify-item" dangerouslySetInnerHTML={{ __html: html }} />
+          <div className="alert alert-info" dangerouslySetInnerHTML={{ __html: html }} />
         ))}
-      </div>
+      </>
     )}
     <PostForm settings={settings} />
     <StatementList statements={statements} settings={settings} meMassrId={me?.massr_id ?? ""} />
@@ -62,14 +85,14 @@ export const UserStatementsPage: FC<
     highlightIds?: Set<string>;
     heading: string;
   }
-> = ({ settings, me, resSize, profile, statements, nextCursor, nextPath, highlightIds, heading }) => {
+> = ({ settings, me, resSize, sidebar, profile, statements, nextCursor, nextPath, highlightIds, heading }) => {
   const icon = userToHash(profile).twitter_icon_url_https;
   return (
     <Layout
       title={`${profile.name} - ${term(settings, "site_name")}`}
       settings={settings}
       me={layoutUser(me)}
-      resSize={resSize}
+      resSize={resSize} sidebar={sidebar}
     >
       <h1 className="profile-head">
         <img className="icon" src={icon} alt={profile.name} />
@@ -102,13 +125,14 @@ export const StatementPage: FC<PageProps & { statement: StatementHash }> = ({
   settings,
   me,
   resSize,
+  sidebar,
   statement,
 }) => (
   <Layout
     title={term(settings, "site_name")}
     settings={settings}
     me={layoutUser(me)}
-    resSize={resSize}
+    resSize={resSize} sidebar={sidebar}
   >
     <StatementItem s={statement} settings={settings} meMassrId={me?.massr_id ?? ""} />
   </Layout>
@@ -118,7 +142,7 @@ export const StatementPage: FC<PageProps & { statement: StatementHash }> = ({
 
 export const UserFormPage: FC<
   PageProps & { email: string; error?: string }
-> = ({ settings, me, email, error }) => {
+> = ({ settings, me, sidebar, email, error }) => {
   const isRegister = me === null;
   const icon = me ? userToHash(me).twitter_icon_url_https : null;
   return (
@@ -126,6 +150,7 @@ export const UserFormPage: FC<
       title={term(settings, isRegister ? "registration" : "settings")}
       settings={settings}
       me={layoutUser(me)}
+      sidebar={sidebar}
     >
       <h1>{term(settings, isRegister ? "registration" : "basic_setting")}</h1>
       {isRegister && <p>{term(settings, "user_info_update")}</p>}
@@ -170,7 +195,7 @@ function statusLabel(settings: MassrSettings, status: number): string {
 
 export const UsersPage: FC<
   PageProps & { users: UserRow[]; unauthCount: number; headingKey?: string }
-> = ({ settings, me, resSize, users, unauthCount, headingKey }) => {
+> = ({ settings, me, resSize, sidebar, users, unauthCount, headingKey }) => {
   const iAmAdmin = me?.status === STATUS.ADMIN;
   const heading = term(settings, headingKey ?? "member");
   return (
@@ -178,7 +203,7 @@ export const UsersPage: FC<
       title={`${heading} - ${term(settings, "site_name")}`}
       settings={settings}
       me={layoutUser(me)}
-      resSize={resSize}
+      resSize={resSize} sidebar={sidebar}
     >
       <h1>{heading}</h1>
       {iAmAdmin && unauthCount > 0 && (
@@ -248,12 +273,6 @@ export const UsersPage: FC<
 
 export const LoginPage: FC<{ settings: MassrSettings }> = ({ settings }) => (
   <Layout title={term(settings, "site_name")} settings={settings} me={null}>
-    <h1>{term(settings, "site_name")}</h1>
-    <img
-      className="masao-img"
-      src={`/img/${iconDir(settings)}/masao.jpg`}
-      alt=""
-    />
     <p>{term(settings, "need_login")}</p>
     <p className="note">
       このサイトは Cloudflare Access で保護されています。許可されたメールアドレスで
@@ -283,12 +302,12 @@ export const SearchPage: FC<
     pins: { word: string; label: string }[];
     nextCursor: string | null;
   }
-> = ({ settings, me, resSize, q, statements, pins, nextCursor }) => (
+> = ({ settings, me, resSize, sidebar, q, statements, pins, nextCursor }) => (
   <Layout
     title={`${term(settings, "search")}: ${q} - ${term(settings, "site_name")}`}
     settings={settings}
     me={layoutUser(me)}
-    resSize={resSize}
+    resSize={resSize} sidebar={sidebar}
   >
     <h1>
       {term(settings, "search")}: {q}
@@ -326,8 +345,8 @@ export const PhotosPage: FC<
     nextCursor: string | null;
     nextPath: string;
   }
-> = ({ settings, me, resSize, title, statements, nextCursor, nextPath }) => (
-  <Layout title={title} settings={settings} me={layoutUser(me)} resSize={resSize}>
+> = ({ settings, me, resSize, sidebar, title, statements, nextCursor, nextPath }) => (
+  <Layout title={title} settings={settings} me={layoutUser(me)} resSize={resSize} sidebar={sidebar}>
     <h1>{term(settings, "photos")}</h1>
     <div className="photo-grid">
       {statements.flatMap((s) =>
@@ -356,12 +375,12 @@ export const PhotosPage: FC<
 
 export const StampsPage: FC<
   PageProps & { stamps: import("../models").StampHash[] }
-> = ({ settings, me, resSize, stamps }) => (
+> = ({ settings, me, resSize, sidebar, stamps }) => (
   <Layout
     title={`${term(settings, "stamps")} - ${term(settings, "site_name")}`}
     settings={settings}
     me={layoutUser(me)}
-    resSize={resSize}
+    resSize={resSize} sidebar={sidebar}
   >
     <h1>{term(settings, "stamps")}</h1>
     <div className="stamp-grid">

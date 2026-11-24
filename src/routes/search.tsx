@@ -13,7 +13,7 @@ import {
   statementToHash,
   updateSearchPinLabel,
 } from "../models";
-import { SearchPage } from "../views/pages";
+import { SearchPage, toSidebarData } from "../views/pages";
 
 const app = new Hono<AppEnv>();
 
@@ -42,6 +42,7 @@ app.get("/search", async (c) => {
       : null;
   return c.html(
     <SearchPage
+      sidebar={toSidebarData(c.get("sidebar"))}
       settings={c.get("settings")}
       me={me}
       resSize={await countResNotifications(c.env.DB, me.id)}

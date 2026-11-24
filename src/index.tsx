@@ -5,7 +5,7 @@ import { loadSettings } from "./settings";
 import { loadPlugins } from "./plugins/registry";
 import "./plugins/index";
 import { resolveAccessEmail } from "./auth";
-import { STATUS, getUserByEmail } from "./models";
+import { STATUS, getUserByEmail, listSearchPins, listUsers } from "./models";
 import mainRoutes from "./routes/main";
 import statementRoutes from "./routes/statements";
 import userRoutes from "./routes/users";
@@ -28,7 +28,19 @@ app.use("*", async (c, next) => {
   c.set("plugins", plugins);
   const email = resolveAccessEmail(c);
   c.set("accessEmail", email);
-  c.set("currentUser", email ? await getUserByEmail(c.env.DB, email) : null);
+  const user = email ? await getUserByEmail(c.env.DB, email) : null;
+  c.set("currentUser", user);
+  // サイドバー（ピン＋メンバー）は HTML ページでのみ使うので、JSON 等では読み込まない。
+  const path = c.req.path;
+  if (user && !path.endsWith(".json") && !path.startsWith("/media/")) {
+    const pins = await listSearchPins(c.env.DB);
+    const members = (await listUsers(c.env.DB)).filter(
+      (u) => u.id !== user.id && u.status !== STATUS.UNAUTHORIZED,
+    );
+    c.set("sidebar", { pins, members });
+  } else {
+    c.set("sidebar", null);
+  }
   await next();
 });
 

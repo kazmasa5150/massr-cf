@@ -6,13 +6,18 @@
     if (!container) return;
     container.textContent = "";
     likes.forEach(function (like) {
+      var a = document.createElement("a");
+      a.href = "/user/" + like.user.massr_id;
       var img = document.createElement("img");
-      img.className = "liker-icon";
+      img.className = "massr-icon-mini";
       img.src = like.user.twitter_icon_url_https;
       img.alt = like.user.name;
       img.title = like.user.name;
-      container.appendChild(img);
+      a.appendChild(img);
+      container.appendChild(a);
     });
+    var row = container.closest(".statement-like");
+    if (row) row.style.display = likes.length > 0 ? "" : "none";
   }
 
   document.querySelectorAll("[data-like-btn]").forEach(function (btn) {
@@ -29,6 +34,14 @@
           });
           btn.setAttribute("data-liked", nowLiked ? "1" : "0");
           btn.classList.toggle("liked", nowLiked);
+          btn.classList.toggle("unlike", nowLiked);
+          btn.classList.toggle("like", !nowLiked);
+          var label = btn.querySelector(".like-label");
+          if (label) {
+            label.textContent = nowLiked
+              ? btn.getAttribute("data-unlike-label") || ""
+              : btn.getAttribute("data-like-label") || "";
+          }
           var count = btn.querySelector(".like-count");
           if (count) count.textContent = hash.likes.length > 0 ? String(hash.likes.length) : "";
           updateLikers(
@@ -209,7 +222,7 @@
     box.textContent = "";
     Object.keys(map).forEach(function (user) {
       var img = document.createElement("img");
-      img.className = "liker-icon";
+      img.className = "massr-icon-mini";
       img.src = map[user][1];
       img.alt = user;
       box.appendChild(img);

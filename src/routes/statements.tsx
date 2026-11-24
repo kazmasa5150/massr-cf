@@ -15,7 +15,7 @@ import {
   statementToHash,
 } from "../models";
 import { term } from "../settings";
-import { PhotosPage, StatementPage } from "../views/pages";
+import { PhotosPage, StatementPage, toSidebarData } from "../views/pages";
 
 const app = new Hono<AppEnv>();
 
@@ -104,6 +104,7 @@ app.get("/statement/photos", async (c) => {
       statements={statements.map(statementToHash)}
       nextCursor={nextCursor}
       nextPath="/statement/photos"
+      sidebar={toSidebarData(c.get("sidebar"))}
     />,
   );
 });
@@ -130,6 +131,7 @@ app.get("/statement/:id", async (c) => {
   const me = c.get("currentUser")!;
   return c.html(
     <StatementPage
+      sidebar={toSidebarData(c.get("sidebar"))}
       settings={c.get("settings")}
       me={me}
       resSize={await countResNotifications(c.env.DB, me.id)}

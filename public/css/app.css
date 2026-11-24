@@ -1,238 +1,585 @@
-/* massr-cf base styles */
-body {
-  font-family: sans-serif;
-  margin: 0;
-  color: #222;
-}
-.site-header {
-  padding: 0.5rem 1rem;
-  border-bottom: 1px solid #ccc;
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-.site-header .site-name {
-  font-weight: bold;
-  text-decoration: none;
-  color: inherit;
-}
-.site-nav {
-  display: flex;
-  gap: 0.75rem;
-  font-size: 0.9rem;
-}
-.site-nav a {
-  color: inherit;
-}
-.res-badge {
-  display: inline-block;
-  min-width: 1.2em;
-  text-align: center;
-  background: #d33;
-  color: #fff;
-  border-radius: 0.6em;
-  font-size: 0.8em;
-  margin-left: 0.25em;
-  padding: 0 0.3em;
-}
-.container {
-  padding: 1rem;
-  max-width: 720px;
-  margin: 0 auto;
-}
-.site-footer {
-  padding: 0.5rem 1rem;
-  border-top: 1px solid #ccc;
-  color: #666;
-  font-size: 0.85rem;
-}
-img.icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 6px;
-  vertical-align: middle;
-}
-img.liker-icon {
-  width: 20px;
-  height: 20px;
-  border-radius: 4px;
-  margin-left: 2px;
-  vertical-align: middle;
-}
-.massr-id {
-  color: #777;
-  margin-left: 0.4em;
-  font-size: 0.9em;
-}
+/*
+ * massr-cf stylesheet.
+ * 元の Massr の default.css（wasam@s production, GPL-3.0）を土台に、
+ * Bootstrap 2 相当のナビバー等の最小限のスタイルを足して移植したもの。
+ */
 
-/* post form */
-.post-form {
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  padding: 0.75rem;
-  margin-bottom: 1rem;
-}
-.post-form textarea {
-  width: 100%;
+* {
+  margin: 0;
+  padding: 0;
   box-sizing: border-box;
 }
-.post-form-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 0.5rem;
-  font-size: 0.85rem;
-}
-.res-banner {
-  background: #eef4ff;
-  border: 1px solid #b9cdf5;
-  border-radius: 6px;
-  padding: 0.3rem 0.5rem;
-  margin-bottom: 0.5rem;
-  font-size: 0.85rem;
+
+body {
+  background-color: #fff;
+  text-align: center;
+  padding: 0 0 4px 0;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  color: #333;
 }
 
-/* statements */
-.statement {
-  border-bottom: 1px solid #e5e5e5;
-  padding: 0.75rem 0;
-}
-.statement.highlight {
-  background: #fffbe6;
-}
-.statement-head {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-.statement-head .created-at {
-  margin-left: auto;
-  color: #777;
-  font-size: 0.85em;
+a {
+  color: #08c;
   text-decoration: none;
 }
-.statement-body {
-  margin: 0.5rem 0 0.5rem 56px;
-  white-space: normal;
-  word-break: break-word;
-}
-.res-quote {
-  margin: 0.5rem 0 0 56px;
-  border-left: 3px solid #ccc;
-  padding-left: 0.5rem;
-  color: #555;
-  font-size: 0.9em;
-}
-.statement-photos img,
-.statement-stamp img {
-  max-width: 100%;
-  max-height: 480px;
-  border-radius: 6px;
-}
-.statement-photos,
-.statement-stamp {
-  margin-left: 56px;
-}
-.statement-actions {
-  margin-left: 56px;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.85rem;
-}
-.like-btn.liked {
-  font-weight: bold;
-}
-.pagination {
-  text-align: center;
-  margin: 1rem 0;
+a:hover {
+  text-decoration: underline;
 }
 
-/* users */
-.users {
-  list-style: none;
-  padding: 0;
+h1 {
+  font-size: large;
+  font-weight: bold;
+  margin: 12px 0;
+  line-height: 1.2;
 }
-.user-row {
+
+/* ---------- navbar (Bootstrap 2 風) ---------- */
+
+.navbar {
+  margin-bottom: 8px;
+  text-align: left;
+}
+.navbar-inner {
+  background-color: #fafafa;
+  background-image: linear-gradient(to bottom, #fff, #f2f2f2);
+  border-bottom: 1px solid #d4d4d4;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.065);
+  padding: 0 12px;
   display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.4rem 0;
-  border-bottom: 1px solid #eee;
   flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
 }
-.user-row .status {
-  color: #666;
-  font-size: 0.85em;
+.navbar .brand {
+  font-size: 20px;
+  font-weight: 200;
+  color: #777;
+  text-shadow: 0 1px 0 #fff;
+  padding: 8px 4px;
 }
-.admin-actions {
-  display: inline-flex;
-  gap: 0.4rem;
+.navbar .brand:hover {
+  text-decoration: none;
+  color: #555;
+}
+.navbar .nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 10px;
   margin-left: auto;
 }
-.admin-actions form {
+.navbar .nav a {
+  color: #777;
+  text-shadow: 0 1px 0 #fff;
+  font-size: 13px;
+  padding: 6px 2px;
+}
+.navbar .nav a:hover {
+  color: #333;
+  text-decoration: none;
+}
+.badge {
+  display: inline-block;
+  background-color: #3a87ad;
+  color: #fff;
+  border-radius: 9px;
+  padding: 1px 7px;
+  font-size: 11px;
+  font-weight: bold;
+  margin-left: 4px;
+  vertical-align: middle;
+}
+.navbar-search {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+.search-query {
+  border: 1px solid #ccc;
+  border-radius: 14px;
+  padding: 4px 10px;
+  font-size: 13px;
+  width: 130px;
+}
+
+/* ---------- layout ---------- */
+
+div.container-fluid {
+  max-width: 700px;
+  text-align: left;
+  margin: 0 auto;
+  padding: 0 4px;
+}
+.row-fluid {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+.span9 {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.span3 {
+  flex: 0 0 150px;
+}
+.span12 {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+@media (max-width: 640px) {
+  .row-fluid {
+    flex-direction: column;
+  }
+  .span3 {
+    flex: 1 1 auto;
+    width: 100%;
+  }
+}
+
+div.main {
+  background-color: #fff;
+  padding: 4px;
+  border-radius: 4px;
+  margin-bottom: 4px;
+}
+div.main h2 {
+  line-height: 100%;
+  font-size: medium;
+  font-weight: bold;
+  margin: 16px 0;
+}
+
+footer {
+  margin-top: 10px;
+  background-repeat: no-repeat;
+  background-position: right bottom;
+  background-size: auto 100px;
+  height: 100px;
+  position: relative;
+  clear: both;
+}
+footer div {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  text-align: right;
+  font-size: 12px;
+  color: #777;
+}
+
+/* ---------- sidebar ---------- */
+
+.well {
+  background-color: #f5f5f5;
+  border: 1px solid #e3e3e3;
+  border-radius: 4px;
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.05);
+}
+.sidebar-nav {
+  padding: 8px;
+}
+.sidebar-nav h2 {
+  line-height: 100%;
+  font-size: small;
+  font-weight: bold;
+  margin-top: 4px;
+  margin-bottom: 4px;
+}
+ul.sidebar-list {
+  margin: 0 0 16px 8px;
+  overflow: hidden;
+}
+ul.sidebar-list li {
+  list-style: none;
+  margin-bottom: 2px;
+  overflow: hidden;
+}
+ul.user-list {
+  line-height: 180%;
+}
+ul.user-list li {
+  list-style: none;
+  margin-bottom: 2px;
+}
+ul.user-list li.user-list {
   display: inline;
 }
-.notice {
-  background: #fff3cd;
-  border: 1px solid #e6cf7a;
-  border-radius: 6px;
-  padding: 0.5rem;
+.search-pin {
+  display: inline;
 }
-.error {
-  color: #b00020;
-}
-.note {
-  color: #666;
-  font-size: 0.85rem;
-}
-.user-form input[type="text"] {
-  margin-left: 0.5rem;
-}
-.profile-head .icon {
-  margin-right: 0.5rem;
+.search-pin a {
+  background-color: #d8d8d8;
+  color: #000;
+  padding: 2px 6px;
+  margin: 0 4px 4px 0;
+  display: inline-block;
+  border-radius: 8px;
+  white-space: nowrap;
+  font-size: 12px;
 }
 
-/* notify area + plugins */
-.notify-area {
-  margin-bottom: 1rem;
-}
-.notify-item {
-  background: #f4f6f8;
-  border: 1px solid #dde3e8;
-  border-radius: 6px;
-  padding: 0.5rem;
-  margin-bottom: 0.5rem;
-}
-.notify-like-icons img {
-  margin-right: 2px;
-}
+/* ---------- alerts / buttons ---------- */
 
-/* search */
-.search-form input {
-  font-size: 0.9rem;
+.alert {
+  padding: 8px 14px;
+  margin-bottom: 10px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  text-align: left;
 }
-.search-pins {
-  margin-bottom: 1rem;
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-  align-items: center;
+.alert-info {
+  background-color: #d9edf7;
+  border-color: #bce8f1;
+  color: #3a87ad;
 }
-.pin {
-  background: #eef4ff;
-  border: 1px solid #b9cdf5;
-  border-radius: 1em;
-  padding: 0.1em 0.6em;
-  font-size: 0.85rem;
-}
-.pin button {
+.alert .close {
+  float: right;
   border: none;
   background: none;
   cursor: pointer;
+  font-size: 14px;
+  color: inherit;
+}
+.error {
+  color: #b94a48;
+  margin: 8px 0;
 }
 
-/* photos */
+.btn {
+  display: inline-block;
+  padding: 4px 12px;
+  font-size: 13px;
+  line-height: 18px;
+  color: #333;
+  text-align: center;
+  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.75);
+  background-color: #f5f5f5;
+  background-image: linear-gradient(to bottom, #fff, #e6e6e6);
+  border: 1px solid #ccc;
+  border-bottom-color: #b3b3b3;
+  border-radius: 4px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 2px rgba(0, 0, 0, 0.05);
+  cursor: pointer;
+}
+.btn:hover {
+  background-color: #e6e6e6;
+  background-image: none;
+}
+.btn-small {
+  padding: 2px 10px;
+  font-size: 12px;
+}
+
+/* ---------- post form ---------- */
+
+textarea {
+  width: 95%;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 4px 6px;
+  font-size: 14px;
+  font-family: inherit;
+}
+div.new-post textarea {
+  height: 4em;
+}
+.new-post .button {
+  text-align: right;
+  margin-top: 4px;
+  padding-right: 2.5%;
+}
+.submit {
+  margin-left: 1em;
+}
+.photo-items,
+.stamp-items {
+  text-align: right;
+  display: inline;
+  font-size: 12px;
+}
+.photo-button,
+.stamp-button {
+  margin: 0 4px;
+  color: #08c;
+  cursor: pointer;
+  background: none;
+  border: none;
+  font-size: 12px;
+}
+.photo-button input[type="file"] {
+  font-size: 11px;
+  max-width: 150px;
+}
+.stamp-tray {
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 0.4rem;
+  margin: 0.5rem 2.5%;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  background: #fff;
+}
+.stamp-thumb {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  cursor: pointer;
+  border: 1px solid #eee;
+  border-radius: 4px;
+}
+.stamp-preview {
+  margin: 0.3rem 2.5%;
+  text-align: left;
+}
+.stamp-preview img {
+  max-height: 80px;
+  vertical-align: middle;
+}
+
+/* ---------- statements ---------- */
+
+img.massr-icon {
+  width: 45px;
+  height: 45px;
+  border-radius: 4px;
+}
+img.massr-icon-mini {
+  width: 20px;
+  height: 20px;
+  border-radius: 3px;
+  vertical-align: middle;
+}
+
+div.statement {
+  border-style: solid;
+  border-width: 1px 0 0 3px;
+  border-color: #eee transparent;
+  margin: 4px 0;
+  padding: 4px 2px 0 2px;
+  clear: both;
+  text-align: left;
+}
+div.statement-new {
+  border-color: #eee #06f;
+}
+div.statement-icon {
+  float: left;
+  margin-right: 2px;
+}
+div.statement-body {
+  border-style: solid;
+  border-width: 0 0 0 1px;
+  border-color: #eee;
+  margin-left: 51px;
+  margin-right: auto;
+  overflow: auto;
+  padding: 0;
+}
+div.statement-body-me {
+  background-color: #f8f8f8;
+}
+div.statement-res-icon {
+  float: left;
+  margin-right: 0;
+  height: 1.2em;
+}
+div.statement-res-icon img {
+  height: 1.1em;
+  width: 1.1em;
+}
+div.statement-res {
+  font-size: 83%;
+  height: 1.2em;
+  white-space: nowrap;
+  line-height: 120%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 2px;
+  margin-right: 4px;
+}
+div.statement-res img {
+  height: 1.1em;
+  width: 1.1em;
+}
+div.statement-message {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  margin-top: 2px;
+  padding-left: 2px;
+}
+.statement-stamp {
+  margin: 0;
+}
+.statement-stamp .stamp-style {
+  width: 100px;
+  height: 100px;
+  position: relative;
+  overflow: hidden;
+}
+.statement-stamp .stamp-style .stamp {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 1000%;
+  height: 2000px;
+  line-height: 2000px;
+  margin: -1000px 0 0 -500%;
+  text-align: center;
+}
+.statement-stamp .stamp-style .stamp img {
+  min-height: 100px;
+  min-width: 10%;
+  vertical-align: middle;
+}
+img.statement-photo {
+  min-height: 32px;
+  min-width: 32px;
+  max-height: 100px;
+  width: auto;
+}
+.statement-photo-item {
+  display: inline-block;
+  vertical-align: top;
+  margin-right: 4px;
+}
+.stamp-add-btn {
+  display: block;
+  font-size: 11px;
+  background: none;
+  border: none;
+  color: #08c;
+  cursor: pointer;
+  padding: 0;
+}
+div.statement-info {
+  border-style: solid;
+  border-width: 1px 1px 1px 0;
+  border-color: #eee;
+  font-size: 70%;
+  height: 1.1em;
+  overflow: hidden;
+  line-height: 110%;
+  background-color: #f8f8f8;
+  margin-top: 4px;
+  padding: 2px;
+  clear: both;
+}
+div.statement-action {
+  margin-top: 2px;
+  padding-right: 4px;
+  padding-bottom: 4px;
+  text-align: right;
+  float: right;
+  border-style: solid;
+  border-width: 0 0 0 1px;
+  border-color: #ccc;
+  font-size: 12px;
+}
+div.statement-action a {
+  margin-left: 0.5em;
+  margin-right: 0.5em;
+  color: #555;
+}
+div.statement-action a:hover {
+  text-decoration: none;
+  color: #000;
+}
+div.statement-action .like-count {
+  margin-left: 2px;
+}
+div.statement-like {
+  border-style: solid;
+  border-width: 1px 1px 1px 0;
+  border-color: #eee;
+  background-color: #f8f8f8;
+  font-size: 83%;
+  padding: 2px 0 2px 2px;
+  margin-top: 2px;
+  line-height: 200%;
+  clear: both;
+}
+div.statement-like img {
+  margin-right: 2px;
+}
+
+/* ---------- pagination ---------- */
+
+.pagination {
+  height: 64px;
+  text-align: center;
+  margin-top: 1em;
+  clear: left;
+}
+
+/* ---------- users / profile ---------- */
+
+.profile-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 8px 0;
+}
+img.icon-large {
+  width: 90px;
+  height: 90px;
+  border-radius: 6px;
+}
+.users-list {
+  list-style: none;
+}
+.users-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid #eee;
+  flex-wrap: wrap;
+}
+.users-list img.icon {
+  width: 45px;
+  height: 45px;
+  border-radius: 4px;
+}
+.users-list .user-main {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.users-list .user-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  font-size: 12px;
+}
+.status {
+  font-size: 11px;
+  color: #777;
+}
+.user-form p {
+  margin: 8px 0;
+}
+.user-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+}
+.user-form input[type="text"],
+.user-form input[type="file"] {
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 4px 6px;
+  font-size: 14px;
+}
+
+/* ---------- photos / stamps pages ---------- */
+
 .photo-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
@@ -255,8 +602,6 @@ img.liker-icon {
   display: block;
   color: #888;
 }
-
-/* stamps */
 .stamp-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
@@ -281,27 +626,46 @@ img.liker-icon {
   gap: 0.3rem;
   margin-top: 0.3rem;
 }
-.stamp-tray {
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  padding: 0.4rem;
-  margin-top: 0.5rem;
+
+/* ---------- search ---------- */
+
+.search-pins {
+  margin-bottom: 1rem;
   display: flex;
+  gap: 0.5rem;
   flex-wrap: wrap;
-  gap: 0.4rem;
+  align-items: center;
 }
-.stamp-thumb {
-  width: 64px;
-  height: 64px;
-  object-fit: contain;
+.search-pins .pin {
+  background: #d8d8d8;
+  border-radius: 8px;
+  padding: 2px 8px;
+  font-size: 12px;
+}
+.search-pins .pin a {
+  color: #000;
+}
+.search-pins .pin button {
+  border: none;
+  background: none;
   cursor: pointer;
-  border: 1px solid #eee;
-  border-radius: 4px;
 }
-.stamp-preview img {
-  max-height: 100px;
+
+/* ---------- notify/like plugin ---------- */
+
+.notify-like {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
 }
-.stamp-add-btn {
-  font-size: 0.8rem;
-  margin-left: 56px;
+.notify-like button {
+  background: none;
+  border: none;
+  color: #08c;
+  cursor: pointer;
+  font-size: 13px;
+}
+.notify-like-icons img {
+  margin-right: 2px;
 }
