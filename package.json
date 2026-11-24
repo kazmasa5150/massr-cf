@@ -4,8 +4,10 @@
   },
   "description": "Massr (wasamas/massr) の Cloudflare ネイティブ移植版",
   "devDependencies": {
+    "@cloudflare/vitest-plugin": "^1.9.2",
     "@cloudflare/workers-types": "^5",
     "typescript": "^5",
+    "vitest": "^5.1.1",
     "wrangler": "^4"
   },
   "license": "GPL-3.0",
@@ -16,8 +18,9 @@
     "db:migrate:remote": "wrangler d1 migrations apply massr-cf --remote",
     "deploy": "wrangler deploy",
     "dev": "wrangler dev",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
   },
   "type": "module",
-  "version": "0.7.1"
+  "version": "0.7.2"
 }

@@ -26,6 +26,14 @@ npm run dev                # wrangler dev（http://localhost:8787）
 - リクエストヘッダー `x-dev-email: you@example.com`
 - 環境変数 `DEV_EMAIL`（`.dev.vars` に記述）
 
+## テスト
+
+```sh
+npm test   # Vitest（Workers ランタイム + ローカル D1 でモデル層を検証）
+```
+
+`test/` のテストは、原作の RSpec（`spec/models/`）のケースを移植したものです。原作との意図的な差分（Twitter 連携フィールドの廃止、プロフィール更新で email を変えない、検索の正規表現→部分一致、プラグイン設定のキー形式）がある箇所は、テスト側で読み替えてあります。
+
 ## 本番デプロイの概要
 
 1. D1 データベースと R2 バケットを作成し、`wrangler.jsonc` の `database_id` を差し替える
