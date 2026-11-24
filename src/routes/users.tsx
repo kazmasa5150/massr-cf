@@ -20,6 +20,7 @@ import {
   updateUserProfile,
 } from "../models";
 import { term } from "../settings";
+import { MAX_UPLOAD_BYTES, detectImageType } from "../plugins/registry";
 import { PhotosPage, UserFormPage, UserStatementsPage, UsersPage, toSidebarData } from "../views/pages";
 
 const app = new Hono<AppEnv>();
@@ -28,10 +29,14 @@ const MASSR_ID_PATTERN = /^[A-Za-z0-9_]{1,30}$/;
 
 async function uploadIcon(c: Context<AppEnv>, file: unknown): Promise<string | null> {
   if (!(file instanceof File) || file.size === 0) return null;
+  if (file.size > MAX_UPLOAD_BYTES) return null;
   const media = c.get("plugins").media[0];
   if (!media) return null;
+  const data = await file.arrayBuffer();
+  const type = detectImageType(data);
+  if (!type) return null; // 画像でないファイルはアイコンにしない
   // 元の DEFAULT_ICON_SIZE = 90、正方形切り抜き。
-  return media.upload(await file.arrayBuffer(), file.type || "application/octet-stream", {
+  return media.upload(data, type, {
     maxSize: 90,
     square: true,
   });

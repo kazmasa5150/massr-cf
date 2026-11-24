@@ -90,4 +90,17 @@ login=$(curl -s $B/login)
 month=$(date +%m)
 contains "login masao uses monthly icon dir" "/img/$month/masao_footer.jpg" "$login"
 
+# --- security hardening ---
+printf '<script>alert(1)</script>' > /tmp/evil.html
+evil=$(curl -s "${A[@]}" -F 'body=evil upload' -F 'photo=@/tmp/evil.html;type=text/html' $B/statement.json)
+contains "html upload is not attached as photo" '"photos":[]' "$evil"
+code=$(curl -s -o /dev/null -w '%{http_code}' "${A[@]}" -H 'Origin: https://evil.example' -X POST -d 'body=csrf' $B/statement.json)
+check "cross-site Origin POST is 403" "403" "$code"
+ok=$(curl -s "${A[@]}" -H "Origin: $B" -X POST -d 'body=origin ok' $B/statement.json)
+contains "same-origin Origin POST works" 'origin ok' "$ok"
+photos=$(curl -s "${A[@]}" $B/statement/photos.json)
+purl=$(printf '%s' "$photos" | json_get "d[0]['photos'][0]")
+hdr=$(curl -s -I "${A[@]}" "$B$purl" | grep -i 'x-content-type-options' || true)
+contains "media served with nosniff" 'nosniff' "$hdr"
+
 echo "== RESULT: pass=$pass fail=$fail"

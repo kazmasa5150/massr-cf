@@ -1,4 +1,5 @@
 import {
+  detectImageType,
   registerPlugin,
   type CachePlugin,
   type IconPlugin,
@@ -36,17 +37,18 @@ const EXT_BY_TYPE: Record<string, string> = {
   "image/gif": "gif",
   "image/webp": "webp",
   "image/avif": "avif",
-  "image/svg+xml": "svg",
 };
 
 registerPlugin("media/cloudflare", (info, _opts, ctx): MediaPlugin => ({
   ...info,
   genre: "media",
-  async upload(data, contentType) {
-    const ext = EXT_BY_TYPE[contentType] ?? "bin";
-    const key = `media/${Date.now().toString(36)}-${crypto.randomUUID()}.${ext}`;
+  async upload(data, _contentType) {
+    // 申告された Content-Type は使わず、実バイトで判定した形式だけを保存する。
+    const type = detectImageType(data);
+    if (!type) throw new Error("unsupported media type");
+    const key = `media/${Date.now().toString(36)}-${crypto.randomUUID()}.${EXT_BY_TYPE[type]}`;
     await ctx.env.MEDIA.put(key, data, {
-      httpMetadata: { contentType },
+      httpMetadata: { contentType: type },
     });
     return `/${key}`;
   },

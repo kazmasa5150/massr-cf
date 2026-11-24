@@ -133,3 +133,25 @@ export function loadPlugins(
   }
   return loaded;
 }
+
+/** アップロードのバイト上限（巨大ファイルによる容量圧迫の防止）。 */
+export const MAX_UPLOAD_BYTES = 20 * 1024 * 1024;
+
+/**
+ * 画像の実バイト列（マジックバイト）から形式を判定する。
+ * アップロード者が申告する Content-Type は信用せず、これで判定した
+ * ラスター画像形式だけを受け付ける（HTML や SVG の混入を防ぐ）。
+ * 対応形式でなければ null。
+ */
+export function detectImageType(data: ArrayBuffer): string | null {
+  const b = new Uint8Array(data.slice(0, 16));
+  const starts = (...bytes: number[]) => bytes.every((v, i) => b[i] === v);
+  const ascii = (from: number, s: string) =>
+    s.split("").every((ch, i) => b[from + i] === ch.charCodeAt(0));
+  if (starts(0xff, 0xd8, 0xff)) return "image/jpeg";
+  if (starts(0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a)) return "image/png";
+  if (ascii(0, "GIF8")) return "image/gif";
+  if (ascii(0, "RIFF") && ascii(8, "WEBP")) return "image/webp";
+  if (ascii(4, "ftyp") && (ascii(8, "avif") || ascii(8, "avis"))) return "image/avif";
+  return null;
+}

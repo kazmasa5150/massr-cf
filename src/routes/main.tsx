@@ -90,6 +90,9 @@ app.get("/media/*", async (c) => {
   return c.body(obj.body, 200, {
     "Content-Type": obj.httpMetadata?.contentType ?? "application/octet-stream",
     "Cache-Control": "public, max-age=31536000, immutable",
+    // 万一の混入に備え、メディアはスクリプト実行できない形で配信する。
+    "X-Content-Type-Options": "nosniff",
+    "Content-Security-Policy": "sandbox",
   });
 });
 

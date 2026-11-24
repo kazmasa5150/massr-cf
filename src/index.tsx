@@ -44,6 +44,39 @@ app.use("*", async (c, next) => {
   await next();
 });
 
+// CSRF 対策（元の Rack::Csrf 相当）: 状態変更リクエストでは Origin が
+// 自オリジンと一致することを確認する。ブラウザのフォーム送信・fetch は
+// 必ず Origin を付けるので、クロスサイトからの送信をここで弾ける。
+// Origin が無い非ブラウザクライアント（curl 等）は対象外とする。
+app.use("*", async (c, next) => {
+  if (c.req.method !== "GET" && c.req.method !== "HEAD" && c.req.method !== "OPTIONS") {
+    const origin = c.req.header("origin");
+    if (origin) {
+      let originHost = "";
+      try {
+        originHost = new URL(origin).host;
+      } catch {
+        return c.text("Forbidden", 403);
+      }
+      if (originHost !== new URL(c.req.url).host) {
+        return c.text("Forbidden", 403);
+      }
+    }
+    if (c.req.header("sec-fetch-site") === "cross-site") {
+      return c.text("Forbidden", 403);
+    }
+  }
+  await next();
+});
+
+// 基本的なセキュリティヘッダー。
+app.use("*", async (c, next) => {
+  await next();
+  c.header("X-Content-Type-Options", "nosniff");
+  c.header("X-Frame-Options", "DENY");
+  c.header("Referrer-Policy", "same-origin");
+});
+
 // 認可ガード（元のログイン必須・未認可ユーザの扱いに相当）。
 // 静的アセットと公開ページは素通りさせる。
 const PUBLIC_PATHS = new Set([
