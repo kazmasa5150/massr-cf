@@ -33,8 +33,11 @@ app.use("*", async (c, next) => {
   // サイドバー（ピン＋メンバー）は HTML ページでのみ使うので、JSON 等では読み込まない。
   const path = c.req.path;
   if (user && !path.endsWith(".json") && !path.startsWith("/media/")) {
-    const pins = await listSearchPins(c.env.DB);
-    const members = (await listUsers(c.env.DB)).filter(
+    const [pins, allUsers] = await Promise.all([
+      listSearchPins(c.env.DB),
+      listUsers(c.env.DB),
+    ]);
+    const members = allUsers.filter(
       (u) => u.id !== user.id && u.status !== STATUS.UNAUTHORIZED,
     );
     c.set("sidebar", { pins, members });

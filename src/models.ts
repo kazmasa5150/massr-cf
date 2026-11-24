@@ -280,10 +280,44 @@ async function hydrate(
   const ids = rows.map((r) => r.id);
   const ph = ids.map(() => "?").join(",");
 
-  const photosRes = await db
-    .prepare(`SELECT statement_id, url FROM statement_photos WHERE statement_id IN (${ph}) ORDER BY sort, id`)
-    .bind(...ids)
-    .all<{ statement_id: number; url: string }>();
+  // レス先（res）のハイドレーション。元の to_hash は res を再帰的に含む。
+  const resIds = [...new Set(rows.map((r) => r.res_id).filter((v): v is number => v !== null))];
+  const rph = resIds.map(() => "?").join(",");
+
+  // 写真・イイネ・被レス・レス先の取得は互いに独立なので並列に実行する。
+  const [photosRes, likesRes, refsRes, resRows] = await Promise.all([
+    db
+      .prepare(`SELECT statement_id, url FROM statement_photos WHERE statement_id IN (${ph}) ORDER BY sort, id`)
+      .bind(...ids)
+      .all<{ statement_id: number; url: string }>(),
+    db
+      .prepare(
+        `SELECT l.statement_id, u.id, u.massr_id, u.email, u.name, u.icon_url, u.status
+       FROM likes l JOIN users u ON u.id = l.user_id
+       WHERE l.statement_id IN (${ph}) ORDER BY l.created_at`,
+      )
+      .bind(...ids)
+      .all<{
+        statement_id: number;
+        id: number;
+        massr_id: string;
+        email: string;
+        name: string;
+        icon_url: string | null;
+        status: number;
+      }>(),
+    db
+      .prepare(`SELECT id, res_id FROM statements WHERE res_id IN (${ph}) ORDER BY created_at`)
+      .bind(...ids)
+      .all<{ id: number; res_id: number }>(),
+    resIds.length > 0 && depth < 10
+      ? db
+          .prepare(`${STATEMENT_SELECT} WHERE s.id IN (${rph})`)
+          .bind(...resIds)
+          .all<StatementRow>()
+      : Promise.resolve(null),
+  ]);
+
   const photosBy = new Map<number, string[]>();
   for (const p of photosRes.results) {
     const arr = photosBy.get(p.statement_id) ?? [];
@@ -291,22 +325,6 @@ async function hydrate(
     photosBy.set(p.statement_id, arr);
   }
 
-  const likesRes = await db
-    .prepare(
-      `SELECT l.statement_id, u.id, u.massr_id, u.email, u.name, u.icon_url, u.status
-       FROM likes l JOIN users u ON u.id = l.user_id
-       WHERE l.statement_id IN (${ph}) ORDER BY l.created_at`,
-    )
-    .bind(...ids)
-    .all<{
-      statement_id: number;
-      id: number;
-      massr_id: string;
-      email: string;
-      name: string;
-      icon_url: string | null;
-      status: number;
-    }>();
   const likesBy = new Map<number, HydratedStatement["likes"]>();
   for (const l of likesRes.results) {
     const arr = likesBy.get(l.statement_id) ?? [];
@@ -314,10 +332,6 @@ async function hydrate(
     likesBy.set(l.statement_id, arr);
   }
 
-  const refsRes = await db
-    .prepare(`SELECT id, res_id FROM statements WHERE res_id IN (${ph}) ORDER BY created_at`)
-    .bind(...ids)
-    .all<{ id: number; res_id: number }>();
   const refsBy = new Map<number, string[]>();
   for (const r of refsRes.results) {
     const arr = refsBy.get(r.res_id) ?? [];
@@ -325,15 +339,8 @@ async function hydrate(
     refsBy.set(r.res_id, arr);
   }
 
-  // レス先（res）のハイドレーション。元の to_hash は res を再帰的に含む。
-  const resIds = [...new Set(rows.map((r) => r.res_id).filter((v): v is number => v !== null))];
   const resBy = new Map<number, HydratedStatement>();
-  if (resIds.length > 0 && depth < 10) {
-    const rph = resIds.map(() => "?").join(",");
-    const resRows = await db
-      .prepare(`${STATEMENT_SELECT} WHERE s.id IN (${rph})`)
-      .bind(...resIds)
-      .all<StatementRow>();
+  if (resRows) {
     for (const h of await hydrate(db, resRows.results, depth + 1)) {
       resBy.set(h.row.id, h);
     }
@@ -447,7 +454,10 @@ export async function createStatement(
     resId: number | null;
     photos: string[];
   },
-): Promise<HydratedStatement> {
+  // 作成した発言の詳細が要る場合（JSON 応答）だけ true。画面投稿では
+  // リダイレクトするだけで詳細を使わないため、再取得を省く。
+  withDetail = true,
+): Promise<HydratedStatement | null> {
   const now = Math.floor(Date.now() / 1000);
   const res = await db
     .prepare(
@@ -477,6 +487,7 @@ export async function createStatement(
     }
   }
   if (batch.length > 0) await db.batch(batch);
+  if (!withDetail) return null;
   const created = await getStatementById(db, id);
   if (!created) throw new Error("createStatement: row vanished");
   return created;
@@ -666,28 +677,58 @@ export async function stampToHash(
 }
 
 /**
+ * スタンプ一覧のハッシュ化。元発言は ID を集めて 1 回で取得し、
+ * スタンプごとに取りに行く N+1 を避ける。
+ */
+export async function stampsToHashes(
+  db: D1Database,
+  stamps: StampRow[],
+): Promise<StampHash[]> {
+  const ids = [
+    ...new Set(
+      stamps
+        .map((s) => s.original_statement_id)
+        .filter((v): v is number => v !== null),
+    ),
+  ];
+  const originals = new Map<number, StatementHash>();
+  if (ids.length > 0) {
+    const ph = ids.map(() => "?").join(",");
+    const { results } = await db
+      .prepare(`${STATEMENT_SELECT} WHERE s.id IN (${ph})`)
+      .bind(...ids)
+      .all<StatementRow>();
+    for (const h of await hydrate(db, results)) {
+      originals.set(h.row.id, statementToHash(h));
+    }
+  }
+  return stamps.map((s) => ({
+    id: String(s.id),
+    created_at: formatJst(s.created_at),
+    image_url: s.image_url,
+    tag: s.tag,
+    popular: s.popular,
+    original:
+      s.original_statement_id !== null
+        ? (originals.get(s.original_statement_id) ?? null)
+        : null,
+  }));
+}
+
+/**
  * スタンプ一覧（popular 降順）。元の get_stamps と同様、
- * 元発言が消えているスタンプは掃除して返さない。
+ * 元発言が消えているスタンプは掃除して返さない（掃除は一括 DELETE）。
  */
 export async function listStamps(db: D1Database): Promise<StampRow[]> {
+  await db
+    .prepare(
+      "DELETE FROM stamps WHERE original_statement_id IS NOT NULL AND original_statement_id NOT IN (SELECT id FROM statements)",
+    )
+    .run();
   const { results } = await db
     .prepare("SELECT * FROM stamps ORDER BY popular DESC, id ASC")
     .all<StampRow>();
-  const alive: StampRow[] = [];
-  for (const stamp of results) {
-    if (stamp.original_statement_id !== null) {
-      const exists = await db
-        .prepare("SELECT id FROM statements WHERE id = ?")
-        .bind(stamp.original_statement_id)
-        .first();
-      if (!exists) {
-        await db.prepare("DELETE FROM stamps WHERE id = ?").bind(stamp.id).run();
-        continue;
-      }
-    }
-    alive.push(stamp);
-  }
-  return alive;
+  return results;
 }
 
 export async function getStampById(

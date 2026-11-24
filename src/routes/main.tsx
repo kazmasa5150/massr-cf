@@ -35,13 +35,12 @@ app.get("/unauthorized", (c) => {
 
 app.get("/", async (c) => {
   const me = c.get("currentUser")!;
-  const statements = await getStatements(c.env.DB, {
-    before: parseDateCursor(c.req.query("date")),
-  });
-  const resSize = await countResNotifications(c.env.DB, me.id);
-  const notifyHtml = (
-    await Promise.all(c.get("plugins").notify.map((p) => p.render()))
-  ).filter((html) => html.length > 0);
+  const [statements, resSize, notifyRenders] = await Promise.all([
+    getStatements(c.env.DB, { before: parseDateCursor(c.req.query("date")) }),
+    countResNotifications(c.env.DB, me.id),
+    Promise.all(c.get("plugins").notify.map((p) => p.render())),
+  ]);
+  const notifyHtml = notifyRenders.filter((html) => html.length > 0);
   const nextCursor =
     statements.length === PAGE_LIMIT
       ? cursorOf(statements[statements.length - 1].row.created_at)

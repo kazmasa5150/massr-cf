@@ -47,13 +47,16 @@ async function uploadIcon(c: Context<AppEnv>, file: unknown): Promise<string | n
 
 app.get("/users.html", async (c) => {
   const me = c.get("currentUser")!;
-  const users = await listUsers(c.env.DB);
+  const [users, resSize] = await Promise.all([
+    listUsers(c.env.DB),
+    countResNotifications(c.env.DB, me.id),
+  ]);
   return c.html(
     <UsersPage
       sidebar={toSidebarData(c.get("sidebar"))}
       settings={c.get("settings")}
       me={me}
-      resSize={await countResNotifications(c.env.DB, me.id)}
+      resSize={resSize}
       users={users}
       unauthCount={users.filter((u) => u.status === STATUS.UNAUTHORIZED).length}
     />,
@@ -133,6 +136,8 @@ function splitJsonSuffix(raw: string): { key: string; json: boolean } {
 
 app.get("/user/:massr_id", async (c) => {
   const { key, json } = splitJsonSuffix(c.req.param("massr_id"));
+  const me = c.get("currentUser")!;
+  const resSizePromise = json ? null : countResNotifications(c.env.DB, me.id);
   const profile = await getUserByMassrId(c.env.DB, key);
   if (!profile) return c.notFound();
   const statements = await getStatements(c.env.DB, {
@@ -140,7 +145,6 @@ app.get("/user/:massr_id", async (c) => {
     userId: profile.id,
   });
   if (json) return c.json(statements.map(statementToHash));
-  const me = c.get("currentUser")!;
   const nextCursor =
     statements.length === PAGE_LIMIT
       ? cursorOf(statements[statements.length - 1].row.created_at)
@@ -150,7 +154,7 @@ app.get("/user/:massr_id", async (c) => {
       sidebar={toSidebarData(c.get("sidebar"))}
       settings={c.get("settings")}
       me={me}
-      resSize={await countResNotifications(c.env.DB, me.id)}
+      resSize={await resSizePromise!}
       profile={profile}
       statements={statements.map(statementToHash)}
       nextCursor={nextCursor}
@@ -212,11 +216,12 @@ async function userListPage(
       : kind === "liked"
         ? { before, userId: profile.id, hasLikes: true }
         : { before, likedBy: profile.id };
+  const me = c.get("currentUser")!;
+  const resSizePromise = json ? null : countResNotifications(c.env.DB, me.id);
   const statements = await getStatements(c.env.DB, query);
   if (json) return c.json(statements.map(statementToHash));
-  const me = c.get("currentUser")!;
   const settings = c.get("settings");
-  const resSize = await countResNotifications(c.env.DB, me.id);
+  const resSize = await resSizePromise!;
   if (kind === "photos") {
     const nextCursor =
       statements.length === PAGE_LIMIT

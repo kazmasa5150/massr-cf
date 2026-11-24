@@ -7,6 +7,7 @@ import {
   getStampById,
   listStamps,
   stampToHash,
+  stampsToHashes,
   updateStampTag,
 } from "../models";
 import { StampsPage, toSidebarData } from "../views/pages";
@@ -15,21 +16,24 @@ const app = new Hono<AppEnv>();
 
 app.get("/stamps", async (c) => {
   const me = c.get("currentUser")!;
-  const stamps = await listStamps(c.env.DB);
+  const [stamps, resSize] = await Promise.all([
+    listStamps(c.env.DB),
+    countResNotifications(c.env.DB, me.id),
+  ]);
   return c.html(
     <StampsPage
       sidebar={toSidebarData(c.get("sidebar"))}
       settings={c.get("settings")}
       me={me}
-      resSize={await countResNotifications(c.env.DB, me.id)}
-      stamps={await Promise.all(stamps.map((s) => stampToHash(c.env.DB, s)))}
+      resSize={resSize}
+      stamps={await stampsToHashes(c.env.DB, stamps)}
     />,
   );
 });
 
 app.get("/stamps.json", async (c) => {
   const stamps = await listStamps(c.env.DB);
-  return c.json(await Promise.all(stamps.map((s) => stampToHash(c.env.DB, s))));
+  return c.json(await stampsToHashes(c.env.DB, stamps));
 });
 
 /** 写真をスタンプに登録する（元の POST /stamp）。 */

@@ -77,13 +77,17 @@ async function postStatement(c: Context<AppEnv>, format: "html" | "json") {
       : c.redirect("/");
   }
 
-  const created = await createStatement(c.env.DB, {
-    userId: me.id,
-    body: bodyText.length > 0 ? bodyText : null,
-    stampUrl: stamp,
-    resId,
-    photos,
-  });
+  const created = await createStatement(
+    c.env.DB,
+    {
+      userId: me.id,
+      body: bodyText.length > 0 ? bodyText : null,
+      stampUrl: stamp,
+      resId,
+      photos,
+    },
+    format === "json",
+  );
 
   if (stamp !== null && Number.isInteger(stampId)) {
     await c.env.DB.prepare(
@@ -96,7 +100,7 @@ async function postStatement(c: Context<AppEnv>, format: "html" | "json") {
   // レス通知メールは Phase 3（Email Sending）で対応する。
   // 本文 URL の自動写真化（async_request）も Phase 3。
 
-  return format === "json" ? c.json(statementToHash(created)) : c.redirect("/");
+  return format === "json" ? c.json(statementToHash(created!)) : c.redirect("/");
 }
 
 app.post("/statement", (c) => postStatement(c, "html"));
@@ -106,10 +110,13 @@ app.post("/statement.json", (c) => postStatement(c, "json"));
 app.get("/statement/photos", async (c) => {
   const me = c.get("currentUser")!;
   const settings = c.get("settings");
-  const statements = await getStatements(c.env.DB, {
-    before: parseDateCursor(c.req.query("date")),
-    hasPhotos: true,
-  });
+  const [statements, resSize] = await Promise.all([
+    getStatements(c.env.DB, {
+      before: parseDateCursor(c.req.query("date")),
+      hasPhotos: true,
+    }),
+    countResNotifications(c.env.DB, me.id),
+  ]);
   const nextCursor =
     statements.length === PAGE_LIMIT
       ? cursorOf(statements[statements.length - 1].row.created_at)
@@ -118,7 +125,7 @@ app.get("/statement/photos", async (c) => {
     <PhotosPage
       settings={settings}
       me={me}
-      resSize={await countResNotifications(c.env.DB, me.id)}
+      resSize={resSize}
       title={term(settings, "all_photos")}
       statements={statements.map(statementToHash)}
       nextCursor={nextCursor}
@@ -144,16 +151,17 @@ function parseIdParam(raw: string): { id: number; json: boolean } {
 
 app.get("/statement/:id", async (c) => {
   const { id, json } = parseIdParam(c.req.param("id"));
+  const me = c.get("currentUser")!;
+  const resSizePromise = json ? null : countResNotifications(c.env.DB, me.id);
   const statement = Number.isInteger(id) ? await getStatementById(c.env.DB, id) : null;
   if (!statement) return c.notFound();
   if (json) return c.json(statementToHash(statement));
-  const me = c.get("currentUser")!;
   return c.html(
     <StatementPage
       sidebar={toSidebarData(c.get("sidebar"))}
       settings={c.get("settings")}
       me={me}
-      resSize={await countResNotifications(c.env.DB, me.id)}
+      resSize={await resSizePromise!}
       statement={statementToHash(statement)}
     />,
   );

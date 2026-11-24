@@ -31,11 +31,14 @@ app.get("/search", async (c) => {
     return c.redirect(`/search?q=${encodeURIComponent(param.q)}`);
   }
   const me = c.get("currentUser")!;
-  const statements = await getStatements(c.env.DB, {
-    before: parseDateCursor(c.req.query("date")),
-    search: param.q,
-  });
-  const pins = await listSearchPins(c.env.DB);
+  const [statements, pins, resSize] = await Promise.all([
+    getStatements(c.env.DB, {
+      before: parseDateCursor(c.req.query("date")),
+      search: param.q,
+    }),
+    listSearchPins(c.env.DB),
+    countResNotifications(c.env.DB, me.id),
+  ]);
   const nextCursor =
     statements.length === PAGE_LIMIT
       ? cursorOf(statements[statements.length - 1].row.created_at)
@@ -45,7 +48,7 @@ app.get("/search", async (c) => {
       sidebar={toSidebarData(c.get("sidebar"))}
       settings={c.get("settings")}
       me={me}
-      resSize={await countResNotifications(c.env.DB, me.id)}
+      resSize={resSize}
       q={param.q}
       statements={statements.map(statementToHash)}
       pins={pins}
