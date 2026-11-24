@@ -4,11 +4,13 @@ import { registerPlugin, type CachePlugin, type MediaPlugin } from "./registry";
  * 組み込みプラグインの登録。
  * ここに登録されたものだけが設定 JSON から有効化できる。
  *
- * Phase 0 で用意するもの:
  * - cache/none: キャッシュなし（元の「キャッシュプラグインが無ければ
  *   memcached を使う」既定動作に対する、Cloudflare 版の無効実装）
- * - media/cloudflare: R2 + Images 変換による画像アップロード。
- *   インターフェースのみで、実装は Phase 1 で行う。
+ * - media/cloudflare: R2 に保存して Worker 経由で配信する画像アップロード。
+ *   リサイズは配信時の Cloudflare Images 変換を想定するが、wrangler dev や
+ *   workers.dev では /cdn-cgi/image が使えないため、Phase 1 では原寸保存・
+ *   原寸配信とし、表示サイズは CSS で制限する（カスタムドメイン運用時に
+ *   変換 URL へ切り替える）。
  */
 
 registerPlugin("cache/none", (info): CachePlugin => ({
@@ -21,11 +23,25 @@ registerPlugin("cache/none", (info): CachePlugin => ({
   async delete() {},
 }));
 
-registerPlugin("media/cloudflare", (info): MediaPlugin => ({
+const EXT_BY_TYPE: Record<string, string> = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/gif": "gif",
+  "image/webp": "webp",
+  "image/avif": "avif",
+  "image/svg+xml": "svg",
+};
+
+registerPlugin("media/cloudflare", (info, _opts, ctx): MediaPlugin => ({
   ...info,
   genre: "media",
-  async upload() {
-    throw new Error("media/cloudflare: upload is implemented in Phase 1");
+  async upload(data, contentType) {
+    const ext = EXT_BY_TYPE[contentType] ?? "bin";
+    const key = `media/${Date.now().toString(36)}-${crypto.randomUUID()}.${ext}`;
+    await ctx.env.MEDIA.put(key, data, {
+      httpMetadata: { contentType },
+    });
+    return `/${key}`;
   },
 }));
 

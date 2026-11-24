@@ -1,20 +1,19 @@
 import { Hono } from "hono";
+import type { AppEnv } from "./types";
 import type { Env } from "./env";
-import { loadSettings, term, type MassrSettings } from "./settings";
-import { loadPlugins, type LoadedPlugins } from "./plugins/registry";
+import { loadSettings } from "./settings";
+import { loadPlugins } from "./plugins/registry";
 import "./plugins/index";
 import { resolveAccessEmail } from "./auth";
-import { Layout } from "./views/layout";
+import { STATUS, getUserByEmail } from "./models";
+import mainRoutes from "./routes/main";
+import statementRoutes from "./routes/statements";
+import userRoutes from "./routes/users";
 
-interface Variables {
-  accessEmail: string | null;
-  settings: MassrSettings;
-  plugins: LoadedPlugins;
-}
+const app = new Hono<AppEnv>();
 
-const app = new Hono<{ Bindings: Env; Variables: Variables }>();
-
-// 全リクエスト共通: 設定の読み込み、プラグインの有効化、Access の識別。
+// 全リクエスト共通: 設定の読み込み、プラグインの有効化、Access の識別、
+// 現在のユーザ（users テーブル）の解決。
 app.use("*", async (c, next) => {
   const settings = loadSettings(c.env);
   c.set("settings", settings);
@@ -22,8 +21,44 @@ app.use("*", async (c, next) => {
     "plugins",
     loadPlugins(settings, { env: c.env, settings, db: c.env.DB }),
   );
-  c.set("accessEmail", resolveAccessEmail(c));
+  const email = resolveAccessEmail(c);
+  c.set("accessEmail", email);
+  c.set("currentUser", email ? await getUserByEmail(c.env.DB, email) : null);
   await next();
+});
+
+// 認可ガード（元のログイン必須・未認可ユーザの扱いに相当）。
+// 静的アセットと公開ページは素通りさせる。
+const PUBLIC_PATHS = new Set([
+  "/login",
+  "/logout",
+  "/unauthorized",
+  "/__health",
+  "/favicon.ico",
+  "/default.json",
+]);
+app.use("*", async (c, next) => {
+  const path = c.req.path;
+  if (
+    PUBLIC_PATHS.has(path) ||
+    path.startsWith("/css/") ||
+    path.startsWith("/js/") ||
+    path.startsWith("/img/") ||
+    path.startsWith("/media/")
+  ) {
+    return next();
+  }
+  if (!c.get("accessEmail")) return c.redirect("/login");
+  const me = c.get("currentUser");
+  if (!me) {
+    // Access 認証済みだが未登録 → 登録フォームへ。
+    if (path === "/user") return next();
+    return c.redirect("/user");
+  }
+  if (me.status === STATUS.UNAUTHORIZED && path !== "/user") {
+    return c.redirect("/unauthorized");
+  }
+  return next();
 });
 
 // 動作確認用: DB 接続と識別状態を返す。
@@ -38,21 +73,9 @@ app.get("/__health", async (c) => {
   return c.json({ ok: true, db, email: c.get("accessEmail") });
 });
 
-// Phase 0 のトップページ（基盤の確認用）。タイムラインは Phase 1 で実装する。
-app.get("/", (c) => {
-  const settings = c.get("settings");
-  const siteName = term(settings, "site_name");
-  const plugins = c.get("plugins");
-  const loaded =
-    plugins.all.map((p) => `${p.genre}/${p.name}`).join(", ") || "(none)";
-  return c.html(
-    <Layout title={siteName} siteName={siteName}>
-      <h1>{siteName}</h1>
-      <p>Phase 0 基盤の動作確認ページです。</p>
-      <p>Access identity: {c.get("accessEmail") ?? "(none)"}</p>
-      <p>Loaded plugins: {loaded}</p>
-    </Layout>,
-  );
-});
+app.route("/", mainRoutes);
+app.route("/", statementRoutes);
+app.route("/", userRoutes);
 
+export type { Env };
 export default app;
