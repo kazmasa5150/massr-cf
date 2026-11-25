@@ -83,10 +83,9 @@ export const UserStatementsPage: FC<
     nextCursor: string | null;
     nextPath: string;
     highlightIds?: Set<string>;
-    heading: string;
+    heading?: string;
   }
 > = ({ settings, me, resSize, sidebar, profile, statements, nextCursor, nextPath, highlightIds, heading }) => {
-  const icon = userToHash(profile).twitter_icon_url_https;
   return (
     <Layout
       title={`${profile.name} - ${term(settings, "site_name")}`}
@@ -94,15 +93,17 @@ export const UserStatementsPage: FC<
       me={layoutUser(me)}
       resSize={resSize} sidebar={sidebar}
     >
-      <h1 className="profile-head">
-        <img className="icon" src={icon} alt={profile.name} />
-        {profile.name}
-        <span className="massr-id">@{profile.massr_id}</span>
-      </h1>
+      {heading && <h1 className="page-heading">{heading}</h1>}
       <p className="profile-links">
-        <a href={`/user/${profile.massr_id}`}>{heading}</a>
+        <a href={`/user/${profile.massr_id}`}>発言</a>
         {" / "}
         <a href={`/user/${profile.massr_id}/res`}>{term(settings, "res")}</a>
+        {" / "}
+        <a href={`/user/${profile.massr_id}/photos`}>写真</a>
+        {" / "}
+        <a href={`/user/${profile.massr_id}/liked`}>{term(settings, "liked")}</a>
+        {" / "}
+        <a href={`/user/${profile.massr_id}/likes`}>{term(settings, "likes")}</a>
       </p>
       <StatementList
         statements={statements}
@@ -173,7 +174,7 @@ export const UserFormPage: FC<
         <p>
           <label>
             {term(settings, "icon")}
-            {icon && <img className="icon" src={icon} alt="" />}
+            {icon && <img className="icon current-icon" src={icon} alt="" />}
             <span className="photo-button">{term(settings, "upload_icon")}</span>
             <input type="file" name="newicon" accept="image/*" className="file-hidden" />
           </label>

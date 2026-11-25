@@ -143,8 +143,6 @@ h1 {
   left: auto;
   right: 0;
 }
-.dropdown:hover .dropdown-menu,
-.dropdown:focus-within .dropdown-menu,
 .dropdown.open .dropdown-menu {
   display: block;
 }
@@ -710,16 +708,21 @@ div.statement-like img {
 
 /* ---------- users / profile ---------- */
 
-.profile-head {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+.page-heading {
+  font-size: 20px;
   margin: 8px 0;
 }
 img.icon-large {
   width: 90px;
   height: 90px;
   border-radius: 6px;
+}
+img.current-icon {
+  width: 90px;
+  height: 90px;
+  object-fit: cover;
+  border-radius: 6px;
+  vertical-align: middle;
 }
 .users-list {
   list-style: none;

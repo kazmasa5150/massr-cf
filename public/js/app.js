@@ -309,7 +309,7 @@
     });
   });
 
-  // ナビのドロップダウン（タッチ操作用にクリックでも開閉する。ホバーでも開く）。
+  // ナビのドロップダウン（元の Bootstrap と同じくクリックで開閉する）。
   document.querySelectorAll(".dropdown-toggle").forEach(function (btn) {
     btn.addEventListener("click", function (ev) {
       ev.stopPropagation();
@@ -326,6 +326,13 @@
     document.querySelectorAll(".dropdown.open").forEach(function (d) {
       d.classList.remove("open");
     });
+  });
+  document.addEventListener("keydown", function (ev) {
+    if (ev.key === "Escape") {
+      document.querySelectorAll(".dropdown.open").forEach(function (d) {
+        d.classList.remove("open");
+      });
+    }
   });
 
   // 画像が無いマサオ等は隠す（icon プラグインの月替わり先に画像が無い場合）。

@@ -159,7 +159,6 @@ app.get("/user/:massr_id", async (c) => {
       statements={statements.map(statementToHash)}
       nextCursor={nextCursor}
       nextPath={`/user/${profile.massr_id}`}
-      heading={`${profile.name}の発言`}
     />,
   );
 });

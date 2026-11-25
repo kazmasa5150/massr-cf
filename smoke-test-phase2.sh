@@ -221,5 +221,11 @@ contains "pin add button uses share-alt icon" 'gicon-share-alt' "$sh2"
 contains "app.js toggles stamp registration" 'data-registered' "$appjs2"
 userpage=$(curl -s "${A[@]}" $B/user)
 contains "settings icon input is hidden" 'file-hidden' "$userpage"
+contains "settings icon has fixed size class" 'current-icon' "$userpage"
+upage=$(curl -s "${A[@]}" $B/user/alice)
+contains "user page lists statements" 'class="statement"' "$upage"
+case "$upage" in *'profile-head'*) echo 'FAIL: user page has no profile head'; fail=$((fail+1));; *) echo 'PASS: user page has no profile head'; pass=$((pass+1));; esac
+appcss=$(curl -s $B/css/app.css)
+case "$appcss" in *'.dropdown:hover .dropdown-menu'*) echo 'FAIL: dropdown is click-only'; fail=$((fail+1));; *) echo 'PASS: dropdown is click-only'; pass=$((pass+1));; esac
 
 echo "== RESULT: pass=$pass fail=$fail"
