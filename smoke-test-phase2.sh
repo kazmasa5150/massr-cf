@@ -86,9 +86,10 @@ nl=$(curl -s "${A[@]}" -X DELETE $B/plugin/notify/like/party/bob)
 case "$nl" in *'"bob"'*) echo "FAIL: notify like delete (any)"; fail=$((fail+1));; *) echo "PASS: notify like delete (any)"; pass=$((pass+1));; esac
 
 # --- icon/rotate ---
+# フッターの masao 画像は元の CSS と同じく /img/masao_footer.jpg（icon_dir の影響を受けない）。
+# icon/rotate の効きは favicon 側で担保される（月ごとのセットに切り替わる）。
 login=$(curl -s $B/login)
-month=$(date +%m)
-contains "login masao uses monthly icon dir" "/img/$month/masao_footer.jpg" "$login"
+contains "footer masao path matches original" "/img/masao_footer.jpg" "$login"
 
 # --- security hardening ---
 printf '<script>alert(1)</script>' > /tmp/evil.html
@@ -156,5 +157,17 @@ contains "res form carries res_id" 'name="res_id"' "$top"
 case "$top" in *'res-banner'*) echo 'FAIL: old res banner removed'; fail=$((fail+1));; *) echo 'PASS: old res banner removed'; pass=$((pass+1));; esac
 appjs=$(curl -s $B/js/app.js)
 contains "app.js toggles inline res form" 'res-form-' "$appjs"
+
+# --- original img assets ---
+code=$(curl -s -o /dev/null -w '%{http_code}' $B/favicon.ico)
+check "favicon.ico served" "200" "$code"
+code=$(curl -s -o /dev/null -w '%{http_code}' $B/img/apple-touch-icon-57x57.png)
+check "apple-touch-icon served" "200" "$code"
+code=$(curl -s -o /dev/null -w '%{http_code}' $B/img/masao_footer.jpg)
+check "masao_footer.jpg served" "200" "$code"
+code=$(curl -s -o /dev/null -w '%{http_code}' $B/img/wakaruwa.png)
+check "wakaruwa.png served" "200" "$code"
+contains "like button uses wakaruwa image" '/img/wakaruwa.png' "$top"
+contains "footer uses masao_footer.jpg" "/img/masao_footer.jpg" "$top"
 
 echo "== RESULT: pass=$pass fail=$fail"

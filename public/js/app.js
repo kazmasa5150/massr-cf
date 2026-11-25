@@ -42,6 +42,10 @@
               ? btn.getAttribute("data-unlike-label") || ""
               : btn.getAttribute("data-like-label") || "";
           }
+          var icon = btn.querySelector(".like-icon");
+          if (icon) {
+            icon.src = nowLiked ? "/img/wakaranaiwa.png" : "/img/wakaruwa.png";
+          }
           var count = btn.querySelector(".like-count");
           if (count) count.textContent = hash.likes.length > 0 ? String(hash.likes.length) : "";
           updateLikers(

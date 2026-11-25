@@ -9,6 +9,7 @@ import {
   parseDateCursor,
   statementToHash,
 } from "../models";
+import { iconDir } from "../settings";
 import { LoginPage, TimelinePage, UnauthorizedPage, toSidebarData } from "../views/pages";
 
 const app = new Hono<AppEnv>();
@@ -95,6 +96,22 @@ app.get("/media/*", async (c) => {
   });
 });
 
-app.get("/favicon.ico", (c) => c.redirect("/img/default-icon.svg"));
+// 元の routes/icon.rb: favicon と apple-touch-icon は icon_dir のセットから配信する。
+app.get("/favicon.ico", async (c) => {
+  const dir = iconDir(c.get("settings"));
+  return c.env.ASSETS.fetch(
+    new Request(`https://assets.local/img/icons/${dir}/favicon.ico`),
+  );
+});
+
+app.get("/img/apple-touch-icon-*", async (c) => {
+  const m = c.req.path.match(/^\/img\/apple-touch-icon-(\d+x\d+)\.png$/);
+  if (!m) return c.notFound();
+  const dir = iconDir(c.get("settings"));
+  const res = await c.env.ASSETS.fetch(
+    new Request(`https://assets.local/img/icons/${dir}/apple-touch-icon-${m[1]}.png`),
+  );
+  return res.status === 200 ? res : c.notFound();
+});
 
 export default app;

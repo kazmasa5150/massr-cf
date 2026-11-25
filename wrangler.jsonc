@@ -4,9 +4,12 @@
   "main": "src/index.tsx",
   "compatibility_date": "2026-11-01",
   // 静的ファイル（public/）は Workers Static Assets で配信し、
-  // 一致しないリクエストだけ Worker に回す。
+  // 一致しないリクエストだけ Worker に回す。favicon と apple-touch-icon は
+  // icon_dir に応じて差し替えるため Worker を先に通す。
   "assets": {
-    "directory": "./public"
+    "directory": "./public",
+    "binding": "ASSETS",
+    "run_worker_first": ["/favicon.ico", "/img/apple-touch-icon-*"]
   },
   "d1_databases": [
     {

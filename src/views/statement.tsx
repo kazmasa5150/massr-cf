@@ -106,6 +106,11 @@ export const StatementItem: FC<{
             data-like-label={term(settings, "like")}
             data-unlike-label={term(settings, "unlike")}
           >
+            <img
+              className="like-icon"
+              src={liked ? "/img/wakaranaiwa.png" : "/img/wakaruwa.png"}
+              alt=""
+            />
             <span className="like-label">
               {liked ? term(settings, "unlike") : term(settings, "like")}
             </span>

@@ -1,5 +1,5 @@
 import type { FC, PropsWithChildren } from "hono/jsx";
-import { iconDir, term, type MassrSettings } from "../settings";
+import { term, type MassrSettings } from "../settings";
 
 export interface LayoutUser {
   massr_id: string;
@@ -34,6 +34,10 @@ export const Layout: FC<
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>{title}</title>
+        <link rel="icon" href="/favicon.ico" />
+        <link rel="apple-touch-icon" href="/img/apple-touch-icon-57x57.png" sizes="57x57" />
+        <link rel="apple-touch-icon" href="/img/apple-touch-icon-72x72.png" sizes="72x72" />
+        <link rel="apple-touch-icon" href="/img/apple-touch-icon-114x114.png" sizes="114x114" />
         <link rel="stylesheet" href="/css/app.css" />
         <script src="/js/app.js" defer />
       </head>
@@ -178,9 +182,7 @@ export const Layout: FC<
               </div>
             )}
           </div>
-          <footer
-            style={`background-image:url('/img/${iconDir(settings)}/masao_footer.jpg')`}
-          >
+          <footer style="background-image:url('/img/masao_footer.jpg')">
             <div>Massr (C) The wasam@s production</div>
           </footer>
         </div>

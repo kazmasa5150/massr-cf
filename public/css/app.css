@@ -840,3 +840,11 @@ a.photo-link { cursor: zoom-in; }
   margin: 2px auto 0;
   text-align: right;
 }
+
+/* わかるわ系ボタンの画像（元の wakaruwa.png / wakaranaiwa.png） */
+.like-button .like-icon,
+.notify-like button img {
+  width: 20px;
+  height: 20px;
+  vertical-align: -5px;
+}
