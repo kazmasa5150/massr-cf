@@ -207,7 +207,7 @@ export const UsersPage: FC<
           return (
             <li className="user-row">
               <a href={`/user/${u.massr_id}`}>
-                <img className="icon" src={icon} alt={u.name} />
+                <img className="massr-icon" src={icon} alt={u.name} />
                 {u.name}
               </a>
               <span className="massr-id">@{u.massr_id}</span>

@@ -235,6 +235,7 @@ contains "notify-like buttons wrapped for right alignment" 'notify-like-buttons'
 userspage=$(curl -s "${A[@]}" $B/users.html)
 contains "users page has email change button" 'data-email-change="bob"' "$userspage"
 contains "admin sees member emails" 'bob@example.com' "$userspage"
+case "$userspage" in *'<img class="icon"'*) echo 'FAIL: users page icons use sized class'; fail=$((fail+1));; *) echo 'PASS: users page icons use sized class'; pass=$((pass+1));; esac
 contains "footer credit aligns to main column" 'footer-credit' "$top2"
 contains "footer masao aligns to sidebar column" 'footer-masao' "$top2"
 code=$(curl -s -o /dev/null -w '%{http_code}' -X PUT "${A[@]}" -H 'Content-Type: application/json' -d '{"email":"alice@example.com"}' $B/user/bob/email)
