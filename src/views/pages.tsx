@@ -282,16 +282,27 @@ export const LoginPage: FC<{ settings: MassrSettings }> = ({ settings }) => (
   </Layout>
 );
 
-export const UnauthorizedPage: FC<PageProps> = ({ settings, me }) => (
-  <Layout
-    title={term(settings, "site_name")}
-    settings={settings}
-    me={layoutUser(me)}
-  >
-    <h1>{term(settings, "site_name")}</h1>
-    <p>{term(settings, "unauthorized")}</p>
-  </Layout>
-);
+export const UnauthorizedPage: FC<PageProps> = ({ settings, me }) => {
+  // 元の unauthorized.haml: マサオ画像（masao.jpg / masao2.jpg / masao3.jpg からランダム）が目印。
+  // watch_authorize.js がこの id="masao" の有無で認可状態を判定する。
+  const masao = ["/img/masao.jpg", "/img/masao2.jpg", "/img/masao3.jpg"][
+    Math.floor(Math.random() * 3)
+  ];
+  return (
+    <Layout
+      title={term(settings, "site_name")}
+      settings={settings}
+      me={layoutUser(me)}
+    >
+      <h1>{term(settings, "site_name")}</h1>
+      <p>{term(settings, "unauthorized")}</p>
+      <p>
+        <img id="masao" src={masao} alt="" />
+      </p>
+      <script src="/js/watch_authorize.js" defer />
+    </Layout>
+  );
+};
 
 /* ---------- 検索 ---------- */
 

@@ -170,4 +170,18 @@ check "wakaruwa.png served" "200" "$code"
 contains "like button uses wakaruwa image" '/img/wakaruwa.png' "$top"
 contains "footer uses masao_footer.jpg" "/img/masao_footer.jpg" "$top"
 
+# --- watch_authorize (unauthorized page) ---
+CAROL=(-H 'x-dev-email: carol@example.com')
+curl -s -o /dev/null "${CAROL[@]}" -X POST -d 'massr_id=carol&name=Carol' $B/user
+unauth=$(curl -s "${CAROL[@]}" $B/unauthorized)
+contains "unauthorized page has masao marker" 'id="masao"' "$unauth"
+contains "unauthorized page loads watch_authorize.js" 'watch_authorize.js' "$unauth"
+watchjs=$(curl -s $B/js/watch_authorize.js)
+contains "watch_authorize polls every 60s" '60000' "$watchjs"
+topu=$(curl -s -L "${CAROL[@]}" $B/)
+contains "unauthorized top still shows masao" 'id="masao"' "$topu"
+curl -s -o /dev/null "${A[@]}" -X PUT -d 'status=1' $B/user/carol
+topa=$(curl -s "${CAROL[@]}" $B/)
+case "$topa" in *'id="masao"'*) echo 'FAIL: authorized top has no masao'; fail=$((fail+1));; *) echo 'PASS: authorized top has no masao'; pass=$((pass+1));; esac
+
 echo "== RESULT: pass=$pass fail=$fail"
