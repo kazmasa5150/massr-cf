@@ -25,9 +25,8 @@ export const Layout: FC<
     me?: LayoutUser | null;
     resSize?: number;
     sidebar?: SidebarData | null;
-    wide?: boolean;
   }>
-> = ({ title, settings, me, resSize = 0, sidebar, wide, children }) => {
+> = ({ title, settings, me, resSize = 0, sidebar, children }) => {
   const siteName = term(settings, "site_name");
   return (
     <html lang="ja">
@@ -141,7 +140,7 @@ export const Layout: FC<
             )}
           </div>
         </header>
-        <div className={wide ? "container-fluid wide" : "container-fluid"}>
+        <div className="container-fluid">
           <div className="row-fluid">
             <div className={me && sidebar ? "span9" : "span12"}>
               <div className="main">{children}</div>

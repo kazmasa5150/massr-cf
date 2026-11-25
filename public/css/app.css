@@ -183,9 +183,6 @@ div.container-fluid {
   margin: 0 auto;
   padding: 0 4px;
 }
-div.container-fluid.wide {
-  max-width: 1240px;
-}
 .row-fluid {
   display: flex;
   gap: 12px;

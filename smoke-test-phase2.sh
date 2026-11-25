@@ -61,7 +61,8 @@ contains "all photos page" '/media/' "$pp"
 case "$pp" in *'<figcaption'*) echo 'FAIL: photos page has no caption'; fail=$((fail+1));; *) echo 'PASS: photos page has no caption'; pass=$((pass+1));; esac
 appjs=$(curl -s $B/js/app.js)
 contains "photos masonry layout present" 'layoutPhotoGrid' "$appjs"
-contains "photos page uses wide layout" 'container-fluid wide' "$pp"
+case "$pp" in *'container-fluid wide'*) echo 'FAIL: photos page keeps normal width'; fail=$((fail+1));; *) echo 'PASS: photos page keeps normal width'; pass=$((pass+1));; esac
+contains "photos masonry column target 110" 'target = 110' "$appjs"
 up=$(curl -s "${A[@]}" $B/user/alice/photos.json)
 contains "user photos json" '"photos":["/media/' "$up"
 

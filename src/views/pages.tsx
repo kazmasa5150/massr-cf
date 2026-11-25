@@ -356,7 +356,7 @@ export const PhotosPage: FC<
     nextPath: string;
   }
 > = ({ settings, me, resSize, sidebar, title, statements, nextCursor, nextPath }) => (
-  <Layout title={title} settings={settings} me={layoutUser(me)} resSize={resSize} sidebar={sidebar} wide>
+  <Layout title={title} settings={settings} me={layoutUser(me)} resSize={resSize} sidebar={sidebar}>
     <h1>{term(settings, "photos")}</h1>
     <div className="photo-grid">
       {statements.flatMap((s) =>

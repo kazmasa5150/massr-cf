@@ -572,8 +572,9 @@
       var W = photoGrid.clientWidth;
       if (!W || photoCells.length === 0) return;
       var gutter = 10;
-      // 写真一覧は元の表示に合わせて基本4列（狭い画面では2列→1列）。
-      var cols = W >= 640 ? 4 : W >= 320 ? 2 : 1;
+      // 元の Masonry と同じ列幅110pxを目安に、入るだけ列を作る。
+      var target = 110;
+      var cols = Math.max(1, Math.floor((W + gutter) / (target + gutter)));
       var colW = (W - (cols - 1) * gutter) / cols;
       var colYs = [];
       for (var i = 0; i < cols; i++) colYs.push(0);
