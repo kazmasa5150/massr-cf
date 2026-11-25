@@ -91,9 +91,12 @@ export const StatementItem: FC<{
         <div className="statement-action">
           {own && (
             <a href="#" data-delete-btn={s.id} title={term(settings, "delete")}>
-              {term(settings, "delete")}
+              <i className="icon icon-trash"></i>
             </a>
           )}
+          <a href="#" data-stamp-open={s.id} title={term(settings, "attach_stamp")}>
+            <i className="icon icon-th"></i>
+          </a>
           <a href="#" data-res-btn={s.id} title={term(settings, "res")}>
             {term(settings, "res")}
             {s.ref_ids.length > 0 ? `(${s.ref_ids.length})` : ""}
@@ -108,7 +111,7 @@ export const StatementItem: FC<{
           >
             <img
               className="like-icon"
-              src={liked ? "/img/wakaranaiwa.png" : "/img/wakaruwa.png"}
+              src={liked ? "/img/wakaruwa.png" : "/img/wakaranaiwa.png"}
               alt=""
             />
             <span className="like-label">
@@ -185,7 +188,11 @@ export const StatementList: FC<{
   </div>
 );
 
-/** 投稿フォーム（元の index の .new-post に相当）。写真添付・スタンプを持つ。 */
+/**
+ * 投稿フォーム（元の index の .new-post に相当）。
+ * スタンプは元の仕様どおり、ボタンでポップアップを開いて選ぶと即投稿される
+ * （フォームに添付する方式ではない）。ポップアップ本体は app.js が構築する。
+ */
 export const PostForm: FC<{ settings: MassrSettings }> = ({ settings }) => (
   <div className="new-post">
     <form
@@ -195,18 +202,9 @@ export const PostForm: FC<{ settings: MassrSettings }> = ({ settings }) => (
       method="post"
       enctype="multipart/form-data"
     >
-      <input type="hidden" name="stamp" id="stamp-url-input" value="" />
-      <input type="hidden" name="stamp_id" id="stamp-id-input" value="" />
       <div>
         <textarea id="text-new" name="body"></textarea>
       </div>
-      <div id="stamp-preview" className="stamp-preview" style="display:none">
-        <img id="stamp-preview-img" src="" alt="stamp" />
-        <button type="button" id="stamp-clear">
-          ×
-        </button>
-      </div>
-      <div id="stamp-tray" className="stamp-tray" style="display:none"></div>
       <div className="button">
         <button className="btn btn-small submit" type="submit">
           {term(settings, "post")}
@@ -218,7 +216,8 @@ export const PostForm: FC<{ settings: MassrSettings }> = ({ settings }) => (
           </label>
         </span>
         <span className="stamp-items">
-          <button type="button" id="stamp-toggle" className="stamp-button">
+          <button type="button" className="stamp-button" data-stamp-open="">
+            <i className="icon icon-th"></i>
             {term(settings, "attach_stamp")}
           </button>
         </span>

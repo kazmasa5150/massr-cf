@@ -44,7 +44,7 @@
           }
           var icon = btn.querySelector(".like-icon");
           if (icon) {
-            icon.src = nowLiked ? "/img/wakaranaiwa.png" : "/img/wakaruwa.png";
+            icon.src = nowLiked ? "/img/wakaruwa.png" : "/img/wakaranaiwa.png";
           }
           var count = btn.querySelector(".like-count");
           if (count) count.textContent = hash.likes.length > 0 ? String(hash.likes.length) : "";
@@ -118,52 +118,131 @@
     });
   });
 
-  // スタンプトレイ（投稿フォーム）。
-  var stampToggle = document.getElementById("stamp-toggle");
-  var stampTray = document.getElementById("stamp-tray");
-  var stampUrlInput = document.getElementById("stamp-url-input");
-  var stampIdInput = document.getElementById("stamp-id-input");
-  var stampPreview = document.getElementById("stamp-preview");
-  var stampPreviewImg = document.getElementById("stamp-preview-img");
-  var stampClear = document.getElementById("stamp-clear");
-  if (stampToggle && stampTray) {
-    var trayLoaded = false;
-    stampToggle.addEventListener("click", function () {
-      var show = stampTray.style.display === "none";
-      stampTray.style.display = show ? "" : "none";
-      if (show && !trayLoaded) {
-        trayLoaded = true;
-        fetch("/stamps.json")
-          .then(function (res) {
-            return res.json();
-          })
-          .then(function (stamps) {
-            stamps.forEach(function (stamp) {
-              var img = document.createElement("img");
-              img.src = stamp.image_url;
-              img.alt = stamp.tag || "stamp";
-              img.className = "stamp-thumb";
-              img.addEventListener("click", function () {
-                if (stampUrlInput) stampUrlInput.value = stamp.image_url;
-                if (stampIdInput) stampIdInput.value = stamp.id;
-                if (stampPreviewImg) stampPreviewImg.src = stamp.image_url;
-                if (stampPreview) stampPreview.style.display = "";
-                stampTray.style.display = "none";
-              });
-              stampTray.appendChild(img);
-            });
-          })
-          .catch(function () {});
+  // スタンプ選択ポップアップ（元の magnific-popup + #stamps 相当）。
+  // 投稿フォームのボタンから開くと新規スタンプ投稿、発言のボタンから開くと
+  // その発言へのスタンプレスになる。選ぶと即 POST /statement.json する。
+  var stampPopup = null;
+  var stampPopupItems = null;
+  var stampSearchField = null;
+  var stampPopupLoaded = false;
+  var stampTargetId = "";
+
+  function ensureStampPopup() {
+    if (stampPopup) return;
+    stampPopup = document.createElement("div");
+    stampPopup.className = "stamp-popup";
+    stampPopup.hidden = true;
+    var box = document.createElement("div");
+    box.className = "stamp-popup-box";
+    var close = document.createElement("button");
+    close.type = "button";
+    close.className = "stamp-popup-close";
+    close.textContent = "×";
+    close.setAttribute("aria-label", "close");
+    stampSearchField = document.createElement("input");
+    stampSearchField.type = "text";
+    stampSearchField.className = "stamp-search";
+    stampSearchField.placeholder = "タグで検索";
+    stampPopupItems = document.createElement("div");
+    stampPopupItems.className = "stamp-popup-items";
+    box.appendChild(close);
+    box.appendChild(stampSearchField);
+    box.appendChild(stampPopupItems);
+    stampPopup.appendChild(box);
+    document.body.appendChild(stampPopup);
+    close.addEventListener("click", closeStampPopup);
+    stampPopup.addEventListener("click", function (e) {
+      if (e.target === stampPopup) closeStampPopup();
+    });
+    document.addEventListener("keydown", function (e) {
+      if (stampPopup && !stampPopup.hidden && e.key === "Escape") {
+        closeStampPopup();
       }
     });
-  }
-  if (stampClear) {
-    stampClear.addEventListener("click", function () {
-      if (stampUrlInput) stampUrlInput.value = "";
-      if (stampIdInput) stampIdInput.value = "";
-      if (stampPreview) stampPreview.style.display = "none";
+    stampSearchField.addEventListener("keyup", function () {
+      var q = stampSearchField.value.toLowerCase();
+      stampPopupItems.querySelectorAll(".submit-stamp").forEach(function (el) {
+        var tag = (el.getAttribute("data-stamp-tag") || "").toLowerCase();
+        el.style.display = tag.indexOf(q) > -1 ? "" : "none";
+      });
     });
   }
+
+  function loadStampItems() {
+    if (stampPopupLoaded) return;
+    stampPopupLoaded = true;
+    fetch("/stamps.json")
+      .then(function (res) {
+        return res.json();
+      })
+      .then(function (stamps) {
+        stamps.forEach(function (stamp) {
+          var wrap = document.createElement("div");
+          wrap.className = "submit-stamp";
+          wrap.setAttribute("data-stamp-tag", stamp.tag || "");
+          var style = document.createElement("div");
+          style.className = "stamp-style";
+          var inner = document.createElement("div");
+          inner.className = "stamp";
+          var img = document.createElement("img");
+          img.className = "item-stamp";
+          img.src = stamp.image_url;
+          img.alt = stamp.tag || "stamp";
+          img.title = (stamp.tag || "") + " " + stamp.popular;
+          img.addEventListener("click", function () {
+            postStamp(stamp);
+          });
+          inner.appendChild(img);
+          style.appendChild(inner);
+          wrap.appendChild(style);
+          stampPopupItems.appendChild(wrap);
+        });
+      })
+      .catch(function () {});
+  }
+
+  function postStamp(stamp) {
+    var form = new FormData();
+    form.append("stamp", stamp.image_url);
+    form.append("stamp_id", stamp.id);
+    if (stampTargetId) form.append("res_id", stampTargetId);
+    fetch("/statement.json", { method: "POST", body: form })
+      .then(function (res) {
+        if (res.ok) {
+          closeStampPopup();
+          window.location.reload();
+        } else {
+          window.alert("スタンプの投稿に失敗しました");
+        }
+      })
+      .catch(function () {
+        window.alert("スタンプの投稿に失敗しました");
+      });
+  }
+
+  function openStampPopup(targetId) {
+    ensureStampPopup();
+    stampTargetId = targetId || "";
+    loadStampItems();
+    stampPopup.hidden = false;
+    document.body.style.overflow = "hidden";
+    window.setTimeout(function () {
+      stampSearchField.focus();
+    }, 50);
+  }
+
+  function closeStampPopup() {
+    if (!stampPopup) return;
+    stampPopup.hidden = true;
+    document.body.style.overflow = "";
+  }
+
+  document.querySelectorAll("[data-stamp-open]").forEach(function (btn) {
+    btn.addEventListener("click", function (e) {
+      e.preventDefault();
+      openStampPopup(btn.getAttribute("data-stamp-open") || "");
+    });
+  });
 
   // スタンプのタグ保存。
   document.querySelectorAll("[data-stamp-tag-form]").forEach(function (form) {

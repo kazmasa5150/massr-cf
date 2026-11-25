@@ -184,4 +184,29 @@ curl -s -o /dev/null "${A[@]}" -X PUT -d 'status=1' $B/user/carol
 topa=$(curl -s "${CAROL[@]}" $B/)
 case "$topa" in *'id="masao"'*) echo 'FAIL: authorized top has no masao'; fail=$((fail+1));; *) echo 'PASS: authorized top has no masao'; pass=$((pass+1));; esac
 
+# --- stamp popup / stamp reply / action icons / like image pairing ---
+top2=$(curl -s "${A[@]}" $B/)
+contains "stamp button in post form" 'data-stamp-open=""' "$top2"
+astmt=$(curl -s "${A[@]}" $B/statement/$sid)
+contains "stamp button in statement actions" "data-stamp-open=\"$sid\"" "$astmt"
+contains "trash icon in statement actions" 'icon-trash' "$astmt"
+contains "stamp icon in statement actions" 'icon-th' "$astmt"
+appjs2=$(curl -s $B/js/app.js)
+contains "app.js builds stamp popup" 'stamp-popup' "$appjs2"
+stamp2=$(curl -s "${A[@]}" -X POST -d "image_url=$purl&statement_id=$sid" $B/stamp)
+stamp2_id=$(printf '%s' "$stamp2" | json_get "d['id']")
+reply=$(curl -s "${BOB[@]}" -X POST -d "stamp=$purl&stamp_id=$stamp2_id&res_id=$sid" $B/statement.json)
+contains "stamp reply carries stamp" "\"stamp\":\"$purl\"" "$reply"
+contains "stamp reply points at original" "\"res\":{\"id\":\"$sid\"" "$reply"
+stamps2=$(curl -s "${A[@]}" $B/stamps.json)
+pop2=$(printf '%s' "$stamps2" | json_get "d[0]['popular']")
+check "stamp reply increments popular" "1" "$pop2"
+curl -s -o /dev/null "${BOB[@]}" -X DELETE $B/statement/$sid/like
+spage1=$(curl -s "${BOB[@]}" $B/statement/$sid)
+contains "like button before like uses wakaranaiwa" '/img/wakaranaiwa.png' "$spage1"
+curl -s -o /dev/null "${BOB[@]}" -X POST $B/statement/$sid/like
+spage2=$(curl -s "${BOB[@]}" $B/statement/$sid)
+contains "like button after like uses wakaruwa" '/img/wakaruwa.png' "$spage2"
+case "$spage2" in *'/img/wakaranaiwa.png'*) echo 'FAIL: liked page has no wakaranaiwa'; fail=$((fail+1));; *) echo 'PASS: liked page has no wakaranaiwa'; pass=$((pass+1));; esac
+
 echo "== RESULT: pass=$pass fail=$fail"

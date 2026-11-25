@@ -388,31 +388,87 @@ div.new-post textarea {
   font-size: 11px;
   max-width: 150px;
 }
-.stamp-tray {
-  border: 1px solid #ddd;
+/* Bootstrap 2 の glyphicons スプライト（元の <i class="icon-*"> 相当）。 */
+.icon {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  line-height: 14px;
+  vertical-align: text-top;
+  background-image: url("/img/glyphicons-halflings.png");
+  background-repeat: no-repeat;
+}
+.icon-th {
+  background-position: -240px 0;
+}
+.icon-trash {
+  background-position: -456px 0;
+}
+
+/* スタンプ選択ポップアップ（元の magnific-popup + #stamps 相当）。 */
+.stamp-popup {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+}
+.stamp-popup[hidden] {
+  display: none;
+}
+.stamp-popup-box {
+  background: #fff;
+  margin-top: 5vh;
+  width: 92%;
+  max-width: 640px;
+  max-height: 85vh;
+  overflow: auto;
   border-radius: 6px;
-  padding: 0.4rem;
-  margin: 0.5rem 2.5%;
+  padding: 12px;
+  position: relative;
+}
+.stamp-popup-close {
+  position: absolute;
+  top: 4px;
+  right: 8px;
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: #666;
+}
+.stamp-search {
+  width: 60%;
+  margin-bottom: 8px;
+}
+.stamp-popup-items {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.4rem;
-  background: #fff;
 }
-.stamp-thumb {
-  width: 64px;
-  height: 64px;
-  object-fit: contain;
-  cursor: pointer;
-  border: 1px solid #eee;
-  border-radius: 4px;
+.submit-stamp .stamp-style {
+  width: 80px;
+  height: 80px;
+  position: relative;
+  overflow: hidden;
+  margin: 10px;
 }
-.stamp-preview {
-  margin: 0.3rem 2.5%;
-  text-align: left;
+.submit-stamp .stamp-style .stamp {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 1000%;
+  height: 2000px;
+  line-height: 2000px;
+  margin: -1000px 0 0 -500%;
+  text-align: center;
 }
-.stamp-preview img {
-  max-height: 80px;
+.submit-stamp .stamp-style .stamp img {
+  min-height: 80px;
+  min-width: 10%;
   vertical-align: middle;
+  cursor: pointer;
 }
 
 /* ---------- statements ---------- */

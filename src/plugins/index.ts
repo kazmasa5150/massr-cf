@@ -94,8 +94,8 @@ registerPlugin("notify/like", (info, opts, ctx): NotifyPlugin => {
         `<div class="notify-like" data-notify-like="${instanceId}">` +
         `<span class="notify-like-label">${labelText}</span> ` +
         `<span class="notify-like-icons">${icons}</span> ` +
-        `<button type="button" data-notify-like-add="${instanceId}"><img src="/img/wakaruwa.png" alt="">わかるわ</button> ` +
-        `<button type="button" data-notify-like-remove="${instanceId}"><img src="/img/wakaranaiwa.png" alt="">わからないわ</button>` +
+        `<button type="button" data-notify-like-add="${instanceId}"><img src="/img/wakaranaiwa.png" alt="">わかるわ</button> ` +
+        `<button type="button" data-notify-like-remove="${instanceId}"><img src="/img/wakaruwa.png" alt="">わからないわ</button>` +
         `</div>`
       );
     },
@@ -104,7 +104,7 @@ registerPlugin("notify/like", (info, opts, ctx): NotifyPlugin => {
 
 /**
  * 月替わりアイコン（元の icon/rotate）。
- * icon_dir を現在月（"01"〜"12"）に差し替える。画像は public/img/<月>/ に置く。
+ * icon_dir を現在月（"01"〜"12"）に差し替える。画像は public/img/icons/<月>/ に置く。
  */
 registerPlugin("icon/rotate", (info): IconPlugin => ({
   ...info,
