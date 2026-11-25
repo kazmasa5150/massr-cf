@@ -227,5 +227,7 @@ contains "user page lists statements" 'class="statement"' "$upage"
 case "$upage" in *'profile-head'*) echo 'FAIL: user page has no profile head'; fail=$((fail+1));; *) echo 'PASS: user page has no profile head'; pass=$((pass+1));; esac
 appcss=$(curl -s $B/css/app.css)
 case "$appcss" in *'.dropdown:hover .dropdown-menu'*) echo 'FAIL: dropdown is click-only'; fail=$((fail+1));; *) echo 'PASS: dropdown is click-only'; pass=$((pass+1));; esac
+case "$upage" in *'profile-links'*) echo 'FAIL: user page has no link row'; fail=$((fail+1));; *) echo 'PASS: user page has no link row'; pass=$((pass+1));; esac
+contains "notify-like buttons wrapped for right alignment" 'notify-like-buttons' "$top2"
 
 echo "== RESULT: pass=$pass fail=$fail"

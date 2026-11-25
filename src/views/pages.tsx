@@ -94,17 +94,6 @@ export const UserStatementsPage: FC<
       resSize={resSize} sidebar={sidebar}
     >
       {heading && <h1 className="page-heading">{heading}</h1>}
-      <p className="profile-links">
-        <a href={`/user/${profile.massr_id}`}>発言</a>
-        {" / "}
-        <a href={`/user/${profile.massr_id}/res`}>{term(settings, "res")}</a>
-        {" / "}
-        <a href={`/user/${profile.massr_id}/photos`}>写真</a>
-        {" / "}
-        <a href={`/user/${profile.massr_id}/liked`}>{term(settings, "liked")}</a>
-        {" / "}
-        <a href={`/user/${profile.massr_id}/likes`}>{term(settings, "likes")}</a>
-      </p>
       <StatementList
         statements={statements}
         settings={settings}

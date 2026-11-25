@@ -861,6 +861,11 @@ img.current-icon {
   cursor: pointer;
   font-size: 13px;
 }
+.notify-like-buttons {
+  margin-left: auto;
+  display: flex;
+  gap: 6px;
+}
 .notify-like-icons img {
   width: 20px;
   height: 20px;

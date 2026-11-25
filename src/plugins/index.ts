@@ -94,8 +94,10 @@ registerPlugin("notify/like", (info, opts, ctx): NotifyPlugin => {
         `<div class="notify-like" data-notify-like="${instanceId}">` +
         `<span class="notify-like-label">${labelText}</span> ` +
         `<span class="notify-like-icons">${icons}</span> ` +
+        `<span class="notify-like-buttons">` +
         `<button type="button" data-notify-like-add="${instanceId}" title="わかるわ"><img src="/img/wakaranaiwa.png" alt="わかるわ"></button> ` +
         `<button type="button" data-notify-like-remove="${instanceId}" title="わからないわ"><img src="/img/wakaruwa.png" alt="わからないわ"></button>` +
+        `</span>` +
         `</div>`
       );
     },
