@@ -273,7 +273,7 @@ export async function deleteUserCascade(
     batch.push(db.prepare("DELETE FROM statement_photos WHERE statement_id = ?").bind(id));
     batch.push(db.prepare("DELETE FROM likes WHERE statement_id = ?").bind(id));
     batch.push(db.prepare("DELETE FROM res_notifications WHERE statement_id = ?").bind(id));
-    batch.push(db.prepare("UPDATE stamps SET original_statement_id = NULL WHERE original_statement_id = ?").bind(id));
+    batch.push(db.prepare("DELETE FROM stamps WHERE original_statement_id = ?").bind(id));
     batch.push(db.prepare("UPDATE statements SET res_id = NULL WHERE res_id = ?").bind(id));
   }
   batch.push(db.prepare("DELETE FROM statements WHERE user_id = ?").bind(user.id));
@@ -525,7 +525,7 @@ export async function deleteStatement(db: D1Database, id: number): Promise<void>
     db.prepare("DELETE FROM statement_photos WHERE statement_id = ?").bind(id),
     db.prepare("DELETE FROM likes WHERE statement_id = ?").bind(id),
     db.prepare("DELETE FROM res_notifications WHERE statement_id = ?").bind(id),
-    db.prepare("UPDATE stamps SET original_statement_id = NULL WHERE original_statement_id = ?").bind(id),
+    db.prepare("DELETE FROM stamps WHERE original_statement_id = ?").bind(id),
     db.prepare("UPDATE statements SET res_id = NULL WHERE res_id = ?").bind(id),
     db.prepare("DELETE FROM statements WHERE id = ?").bind(id),
   ]);
@@ -567,6 +567,14 @@ export async function countResNotifications(
     .bind(userId)
     .first<{ c: number }>();
   return r?.c ?? 0;
+}
+
+export async function countUnauthorizedUsers(db: D1Database): Promise<number> {
+  const row = await db
+    .prepare("SELECT COUNT(*) AS n FROM users WHERE status = ?")
+    .bind(STATUS.UNAUTHORIZED)
+    .first<{ n: number }>();
+  return row?.n ?? 0;
 }
 
 export async function listResNotificationIds(

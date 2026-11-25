@@ -49,30 +49,60 @@ export const TimelinePage: FC<
     statements: StatementHash[];
     nextCursor: string | null;
     notifyHtml?: string[];
+    unauthCount?: number;
   }
-> = ({ settings, me, resSize, sidebar, statements, nextCursor, notifyHtml }) => (
-  <Layout
-    title={term(settings, "site_name")}
-    settings={settings}
-    me={layoutUser(me)}
-    resSize={resSize} sidebar={sidebar}
-  >
-    {notifyHtml && notifyHtml.length > 0 && (
-      <>
-        {notifyHtml.map((html) => (
-          <div className="alert alert-info" dangerouslySetInnerHTML={{ __html: html }} />
-        ))}
-      </>
-    )}
-    <PostForm settings={settings} />
-    <StatementList statements={statements} settings={settings} meMassrId={me?.massr_id ?? ""} />
-    {nextCursor && (
-      <p className="pagination">
-        <a href={`/?date=${nextCursor}`}>← older</a>
-      </p>
-    )}
-  </Layout>
-);
+> = ({ settings, me, resSize, sidebar, statements, nextCursor, notifyHtml, unauthCount }) => {
+  const resParts = (settings.local["response_count"] ?? "新着レスが%1個あります").split("%1");
+  return (
+    <Layout
+      title={term(settings, "site_name")}
+      settings={settings}
+      me={layoutUser(me)}
+      resSize={resSize} sidebar={sidebar}
+    >
+      {me && me.status === 0 && (unauthCount ?? 0) > 0 && (
+        <div className="alert alert-info">
+          <a href="/admin">{term(settings, "unauth_count", unauthCount ?? 0)}</a>
+        </div>
+      )}
+      {notifyHtml && notifyHtml.length > 0 && (
+        <>
+          {notifyHtml.map((html) => (
+            <div className="alert alert-info" dangerouslySetInnerHTML={{ __html: html }} />
+          ))}
+        </>
+      )}
+      {me && (
+        <div
+          className="alert alert-info"
+          id="new-res-size-main"
+          style={(resSize ?? 0) > 0 ? "" : "display:none"}
+        >
+          <a id="new-res-notice-text" href={`/user/${me.massr_id}/res`}>
+            {resParts[0]}
+            <span className="new-res-count">{resSize ?? 0}</span>
+            {resParts[1] ?? ""}
+          </a>
+          <a
+            id="new-res-notice-delete-button"
+            className="close"
+            href="#"
+            title={term(settings, "clearres")}
+          >
+            {"×"}
+          </a>
+        </div>
+      )}
+      <PostForm settings={settings} />
+      <StatementList statements={statements} settings={settings} meMassrId={me?.massr_id ?? ""} />
+      {nextCursor && (
+        <p className="pagination">
+          <a href={`/?date=${nextCursor}`}>← older</a>
+        </p>
+      )}
+    </Layout>
+  );
+};
 
 /* ---------- ユーザの発言一覧 / レス一覧 ---------- */
 

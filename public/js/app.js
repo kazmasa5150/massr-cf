@@ -92,9 +92,34 @@
         .then(function (data) {
           badge.textContent = String(data.size);
           badge.style.display = data.size > 0 ? "" : "none";
+          var bar = document.getElementById("new-res-size-main");
+          if (bar) {
+            bar.style.display = data.size > 0 ? "" : "none";
+            var cnt = bar.querySelector(".new-res-count");
+            if (cnt) cnt.textContent = String(data.size);
+          }
         })
         .catch(function () {});
     }, 30000);
+  }
+
+  // トップの新着レス通知バーの×ボタン（元の #new-res-notice-delete-button）。
+  var resClearBtn = document.getElementById("new-res-notice-delete-button");
+  if (resClearBtn) {
+    resClearBtn.addEventListener("click", function (ev) {
+      ev.preventDefault();
+      fetch("/newres", { method: "DELETE" })
+        .then(function () {
+          var bar = document.getElementById("new-res-size-main");
+          if (bar) bar.style.display = "none";
+          var b = document.getElementById("res-badge");
+          if (b) {
+            b.textContent = "0";
+            b.style.display = "none";
+          }
+        })
+        .catch(function () {});
+    });
   }
 
   // 写真をスタンプに登録／解除する（元の usestamp / unusestamp のトグル）。

@@ -257,4 +257,36 @@ contains "bob logs in with new email" '参加しますか？' "$bob2top"
 oldloc=$(curl -s -o /dev/null -w '%{http_code} %{redirect_url}' "${BOB[@]}" $B/)
 case "$oldloc" in '302'*'/user') echo 'PASS: old email no longer logs in'; pass=$((pass+1));; *) echo "FAIL: old email no longer logs in ($oldloc)"; fail=$((fail+1));; esac
 
+
+# --- v0.13.0 original parity: unauth alert / res notice bar / stamp destroy ---
+DAVE=(-H 'x-dev-email: dave@example.com')
+curl -s -o /dev/null "${DAVE[@]}" -X POST -d 'massr_id=dave&name=Dave' $B/user
+topd=$(curl -s "${A[@]}" $B/)
+contains "admin timeline shows unauth alert" '未認証ユーザが1人います' "$topd"
+topc=$(curl -s "${CAROL[@]}" $B/)
+case "$topc" in *'未認証ユーザが'*) echo 'FAIL: non-admin timeline hides unauth alert'; fail=$((fail+1));; *) echo 'PASS: non-admin timeline hides unauth alert'; pass=$((pass+1));; esac
+curl -s -o /dev/null "${A[@]}" -X PUT -d 'status=1' $B/user/dave
+topd2=$(curl -s "${A[@]}" $B/)
+case "$topd2" in *'未認証ユーザが'*) echo 'FAIL: unauth alert gone after approval'; fail=$((fail+1));; *) echo 'PASS: unauth alert gone after approval'; pass=$((pass+1));; esac
+BOB2=(-H 'x-dev-email: bob2@example.com')
+tid=$(curl -s "${A[@]}" $B/user/alice.json | json_get "d[0]['id']")
+curl -s -o /dev/null "${BOB2[@]}" -X POST -d "body=res for alice&res_id=$tid" $B/statement.json
+topr=$(curl -s "${A[@]}" $B/)
+contains "timeline shows res notice bar" 'id="new-res-size-main"' "$topr"
+contains "res notice bar has count text" '新着レスが' "$topr"
+contains "res notice bar has clear button" 'new-res-notice-delete-button' "$topr"
+appjs3=$(curl -s $B/js/app.js)
+contains "app.js handles res clear button" 'new-res-notice-delete-button' "$appjs3"
+curl -s -o /dev/null "${A[@]}" -X DELETE $B/newres
+rsz=$(curl -s "${A[@]}" $B/ressize.json)
+contains "res cleared by DELETE /newres" '"size":0' "$rsz"
+spost=$(curl -s "${A[@]}" -F 'body=stamp source photo' -F 'photo=@/tmp/test.png' $B/statement.json)
+spid=$(printf '%s' "$spost" | json_get "d['id']")
+spurl=$(printf '%s' "$spost" | json_get "d['photos'][0]")
+curl -s -o /dev/null "${A[@]}" -X POST -d "image_url=$spurl&statement_id=$spid" $B/stamp
+slist=$(curl -s "${A[@]}" $B/stamps.json)
+contains "stamp listed before statement delete" "$spurl" "$slist"
+curl -s -o /dev/null "${A[@]}" -X DELETE $B/statement/$spid
+slist2=$(curl -s "${A[@]}" $B/stamps.json)
+case "$slist2" in *"$spurl"*) echo 'FAIL: stamp destroyed with original statement'; fail=$((fail+1));; *) echo 'PASS: stamp destroyed with original statement'; pass=$((pass+1));; esac
 echo "== RESULT: pass=$pass fail=$fail"

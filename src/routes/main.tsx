@@ -2,12 +2,14 @@ import { Hono } from "hono";
 import type { AppEnv } from "../types";
 import {
   PAGE_LIMIT,
-  countResNotifications,
+  STATUS,
   clearResNotifications,
+  countResNotifications,
+  countUnauthorizedUsers,
   cursorOf,
   getStatements,
   parseDateCursor,
-  statementToHash,
+  statementToHash
 } from "../models";
 import { iconDir } from "../settings";
 import { LoginPage, TimelinePage, UnauthorizedPage, toSidebarData } from "../views/pages";
@@ -36,10 +38,13 @@ app.get("/unauthorized", (c) => {
 
 app.get("/", async (c) => {
   const me = c.get("currentUser")!;
-  const [statements, resSize, notifyRenders] = await Promise.all([
+  const [statements, resSize, notifyRenders, unauthCount] = await Promise.all([
     getStatements(c.env.DB, { before: parseDateCursor(c.req.query("date")) }),
     countResNotifications(c.env.DB, me.id),
     Promise.all(c.get("plugins").notify.map((p) => p.render())),
+    me.status === STATUS.ADMIN
+      ? countUnauthorizedUsers(c.env.DB)
+      : Promise.resolve(0),
   ]);
   const notifyHtml = notifyRenders.filter((html) => html.length > 0);
   const nextCursor =
@@ -54,6 +59,7 @@ app.get("/", async (c) => {
       statements={statements.map(statementToHash)}
       nextCursor={nextCursor}
       notifyHtml={notifyHtml}
+      unauthCount={unauthCount}
       sidebar={toSidebarData(c.get("sidebar"))}
     />,
   );
