@@ -52,15 +52,15 @@ npm test   # Vitest（Workers ランタイム + ローカル D1 でモデル層�
 
 ## プラグインの有効化
 
-プラグインは設定 JSON の `plugin` セクションで有効化します（元の Massr と同じ書式）。開発時は `.dev.vars` に `MASSR_SETTINGS_JSON` を書くと差分マージされます。
+プラグインは設定 JSON の `plugin` セクションで有効化します（元の Massr と同じ書式）。`public/default.json` の既定では `media/cloudflare` と `icon/rotate` が有効です。開発時は `.dev.vars` に `MASSR_SETTINGS_JSON` を書くと差分マージされます。
 
 ```
-MASSR_SETTINGS_JSON={"plugin":{"notify/information news":{"message":"お知らせ文"},"notify/like party":{"label":"参加しますか？","delete":"any"},"icon/rotate":{}}}
+MASSR_SETTINGS_JSON={"plugin":{"notify/information news":{"message":"お知らせ文"},"notify/like party":{"label":"参加しますか？","delete":"any"}}}
 ```
 
 - `notify/information <ラベル>`: お知らせ欄に `message` を表示する
 - `notify/like <ラベル>`: 全体イイネ（出欠確認など）。`delete` は `owner`（自分の分だけ取消可）か `any`（誰の分でも取消可）
-- `icon/rotate`: サイトアイコンのディレクトリを現在月に切り替える（画像は `public/img/<MM>/` に配置）
+- `icon/rotate`: サイトアイコン（favicon / apple-touch-icon）のディレクトリを現在月に切り替える（画像は `public/img/icons/<MM>/` に配置。既定で有効）
 
 移植計画の詳細は別途「Massr 移植計画書」を参照してください。
 
