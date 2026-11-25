@@ -799,19 +799,27 @@ img.current-icon {
 /* ---------- photos / stamps pages ---------- */
 
 .photo-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  align-items: flex-start;
+  display: block;
 }
 .photo-cell {
-  margin: 0;
+  margin: 0 0 8px;
 }
 .photo-cell img {
   width: auto;
   max-width: 100%;
   height: auto;
   border-radius: 6px;
+}
+.photo-grid.masonry {
+  position: relative;
+}
+.photo-grid.masonry .photo-cell {
+  position: absolute;
+  margin: 0;
+}
+.photo-grid.masonry .photo-cell img {
+  display: block;
+  width: 100%;
 }
 .stamp-grid {
   display: grid;

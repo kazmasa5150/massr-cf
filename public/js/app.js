@@ -560,4 +560,48 @@
       openLightbox(urls, links.indexOf(link));
     });
   });
+
+  // 写真一覧のマソンリー配置（元の jQuery Masonry 相当）。
+  // 幅230px前後の列に、縦横比を保ったまま短い列から詰めていく。
+  var photoGrid = document.querySelector(".photo-grid");
+  if (photoGrid) {
+    var photoCells = Array.prototype.slice.call(
+      photoGrid.querySelectorAll(".photo-cell")
+    );
+    var layoutPhotoGrid = function () {
+      var W = photoGrid.clientWidth;
+      if (!W || photoCells.length === 0) return;
+      var gutter = 10;
+      var target = 230;
+      var cols = Math.max(1, Math.floor((W + gutter) / (target + gutter)));
+      var colW = (W - (cols - 1) * gutter) / cols;
+      var colYs = [];
+      for (var i = 0; i < cols; i++) colYs.push(0);
+      photoCells.forEach(function (cell) {
+        var img = cell.querySelector("img");
+        var h = 0;
+        if (img && img.naturalWidth > 0) {
+          h = colW * (img.naturalHeight / img.naturalWidth);
+        }
+        var col = 0;
+        for (var j = 1; j < cols; j++) {
+          if (colYs[j] < colYs[col]) col = j;
+        }
+        cell.style.left = col * (colW + gutter) + "px";
+        cell.style.top = colYs[col] + "px";
+        cell.style.width = colW + "px";
+        colYs[col] += h + gutter;
+      });
+      photoGrid.style.height = Math.max.apply(null, colYs) + "px";
+    };
+    photoGrid.classList.add("masonry");
+    photoCells.forEach(function (cell) {
+      var img = cell.querySelector("img");
+      if (img && !img.complete) {
+        img.addEventListener("load", layoutPhotoGrid);
+      }
+    });
+    window.addEventListener("resize", layoutPhotoGrid);
+    layoutPhotoGrid();
+  }
 })();
