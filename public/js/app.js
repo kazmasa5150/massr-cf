@@ -572,8 +572,8 @@
       var W = photoGrid.clientWidth;
       if (!W || photoCells.length === 0) return;
       var gutter = 10;
-      var target = 230;
-      var cols = Math.max(1, Math.floor((W + gutter) / (target + gutter)));
+      // 写真一覧は元の表示に合わせて基本4列（狭い画面では2列→1列）。
+      var cols = W >= 640 ? 4 : W >= 320 ? 2 : 1;
       var colW = (W - (cols - 1) * gutter) / cols;
       var colYs = [];
       for (var i = 0; i < cols; i++) colYs.push(0);
