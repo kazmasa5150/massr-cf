@@ -86,7 +86,7 @@ MASSR_SETTINGS_JSON={"plugin":{"notify/information news":{"message":"お知ら�
 - `notify/like <ラベル>`: 全体イイネ（出欠確認など）。`delete` は `owner`（自分の分だけ取消可）か `any`（誰の分でも取消可）
 - `icon/rotate`: サイトアイコン（favicon / apple-touch-icon）のディレクトリを現在月に切り替える（画像は `public/img/icons/<MM>/` に配置。既定で有効）
 
-移植計画の詳細は別途「Massr 移植計画書」を参照してください。
+移植計画の詳細は [Massr 移植計画書](docs/Massr移植計画書.md) を参照してください。
 
 ## 注意
 
