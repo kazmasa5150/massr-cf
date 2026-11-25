@@ -404,6 +404,27 @@ div.new-post textarea {
 .icon-trash {
   background-position: -456px 0;
 }
+.icon-search {
+  background-position: -48px 0;
+}
+.icon-camera {
+  background-position: -120px -48px;
+}
+.icon-comment {
+  background-position: -240px -120px;
+}
+.icon-ok-circle {
+  background-position: -192px -96px;
+}
+.icon-remove-circle {
+  background-position: -168px -96px;
+}
+.icon-share-alt {
+  background-position: -336px -96px;
+}
+.icon-remove {
+  background-position: -312px 0;
+}
 
 /* スタンプ選択ポップアップ（元の magnific-popup + #stamps 相当）。 */
 .stamp-popup {
@@ -579,12 +600,10 @@ img.statement-photo {
 }
 .stamp-add-btn {
   display: block;
-  font-size: 11px;
   background: none;
   border: none;
-  color: #08c;
   cursor: pointer;
-  padding: 0;
+  padding: 2px;
 }
 /* 複数写真は四角いグリッドで並べる（2枚以上で 2 列） */
 .statement-photos.photos-count-2,

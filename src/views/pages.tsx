@@ -328,13 +328,13 @@ export const SearchPage: FC<
         <span className="pin">
           <a href={`/search?q=${encodeURIComponent(pin.word)}`}>{pin.label}</a>
           <button type="button" data-pin-delete={pin.word} title="ピンを外す">
-            ×
+            <i className="icon icon-remove"></i>
           </button>
         </span>
       ))}
       {!pins.some((p) => p.word === q) && (
-        <button type="button" data-pin-add={q}>
-          この検索をピン留め
+        <button type="button" data-pin-add={q} title="この検索をピン留め">
+          <i className="icon icon-share-alt"></i>
         </button>
       )}
     </div>

@@ -75,8 +75,11 @@ export const StatementItem: FC<{
                   className="stamp-add-btn"
                   data-stamp-add={s.id}
                   data-image-url={url}
+                  data-use-label={term(settings, "use_stamp")}
+                  data-unuse-label={term(settings, "unuse_stamp")}
+                  title={term(settings, "use_stamp")}
                 >
-                  {term(settings, "use_stamp")}
+                  <i className="icon icon-ok-circle"></i>
                 </button>
               </span>
             ))}
@@ -98,7 +101,7 @@ export const StatementItem: FC<{
             <i className="icon icon-th"></i>
           </a>
           <a href="#" data-res-btn={s.id} title={term(settings, "res")}>
-            {term(settings, "res")}
+            <i className="icon icon-comment"></i>
             {s.ref_ids.length > 0 ? `(${s.ref_ids.length})` : ""}
           </a>
           <a
@@ -108,18 +111,13 @@ export const StatementItem: FC<{
             data-liked={liked ? "1" : "0"}
             data-like-label={term(settings, "like")}
             data-unlike-label={term(settings, "unlike")}
+            title={liked ? term(settings, "unlike") : term(settings, "like")}
           >
             <img
               className="like-icon"
               src={liked ? "/img/wakaruwa.png" : "/img/wakaranaiwa.png"}
-              alt=""
+              alt={liked ? term(settings, "unlike") : term(settings, "like")}
             />
-            <span className="like-label">
-              {liked ? term(settings, "unlike") : term(settings, "like")}
-            </span>
-            <span className="like-count">
-              {s.likes.length > 0 ? s.likes.length : ""}
-            </span>
           </a>
         </div>
 
@@ -158,8 +156,8 @@ export const StatementItem: FC<{
               <button type="submit" className="btn btn-small">
                 {term(settings, "post_res")}
               </button>
-              <label className="photo-button">
-                {term(settings, "attach_photo")}
+              <label className="photo-button" title={term(settings, "attach_photo")}>
+                <i className="icon icon-camera"></i>
                 <input type="file" name="photo" accept="image/*" multiple />
               </label>
             </div>
@@ -210,15 +208,19 @@ export const PostForm: FC<{ settings: MassrSettings }> = ({ settings }) => (
           {term(settings, "post")}
         </button>
         <span className="photo-items">
-          <label className="photo-button">
-            {term(settings, "attach_photo")}
+          <label className="photo-button" title={term(settings, "attach_photo")}>
+            <i className="icon icon-camera"></i>
             <input type="file" name="photo" accept="image/*" multiple />
           </label>
         </span>
         <span className="stamp-items">
-          <button type="button" className="stamp-button" data-stamp-open="">
+          <button
+            type="button"
+            className="stamp-button"
+            data-stamp-open=""
+            title={term(settings, "attach_stamp")}
+          >
             <i className="icon icon-th"></i>
-            {term(settings, "attach_stamp")}
           </button>
         </span>
       </div>

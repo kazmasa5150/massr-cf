@@ -209,4 +209,15 @@ spage2=$(curl -s "${BOB[@]}" $B/statement/$sid)
 contains "like button after like uses wakaruwa" '/img/wakaruwa.png' "$spage2"
 case "$spage2" in *'/img/wakaranaiwa.png'*) echo 'FAIL: liked page has no wakaranaiwa'; fail=$((fail+1));; *) echo 'PASS: liked page has no wakaranaiwa'; pass=$((pass+1));; esac
 
+# --- icon-only buttons (original UI parity) ---
+contains "search button is icon-only" 'icon-search' "$top2"
+contains "post form photo attach is icon-only" 'icon-camera' "$top2"
+contains "res button is icon-only" 'icon-comment' "$astmt"
+case "$astmt" in *'class="like-label"'*) echo 'FAIL: like button has no text label'; fail=$((fail+1));; *) echo 'PASS: like button has no text label'; pass=$((pass+1));; esac
+contains "notify-like add button is image-only" '<img src="/img/wakaranaiwa.png" alt="わかるわ">' "$top2"
+contains "photo stamp toggle uses ok-circle icon" 'icon-ok-circle' "$astmt"
+sh2=$(curl -s "${A[@]}" "$B/search?q=photo")
+contains "pin add button uses share-alt icon" 'icon-share-alt' "$sh2"
+contains "app.js toggles stamp registration" 'data-registered' "$appjs2"
+
 echo "== RESULT: pass=$pass fail=$fail"

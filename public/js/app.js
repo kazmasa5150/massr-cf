@@ -36,18 +36,14 @@
           btn.classList.toggle("liked", nowLiked);
           btn.classList.toggle("unlike", nowLiked);
           btn.classList.toggle("like", !nowLiked);
-          var label = btn.querySelector(".like-label");
-          if (label) {
-            label.textContent = nowLiked
-              ? btn.getAttribute("data-unlike-label") || ""
-              : btn.getAttribute("data-like-label") || "";
-          }
+          btn.title = nowLiked
+            ? btn.getAttribute("data-unlike-label") || ""
+            : btn.getAttribute("data-like-label") || "";
           var icon = btn.querySelector(".like-icon");
           if (icon) {
             icon.src = nowLiked ? "/img/wakaruwa.png" : "/img/wakaranaiwa.png";
+            icon.alt = btn.title;
           }
-          var count = btn.querySelector(".like-count");
-          if (count) count.textContent = hash.likes.length > 0 ? String(hash.likes.length) : "";
           updateLikers(
             document.querySelector('[data-likers="' + id + '"]'),
             hash.likes
@@ -101,20 +97,55 @@
     }, 30000);
   }
 
-  // 写真をスタンプに登録する。
-  document.querySelectorAll("[data-stamp-add]").forEach(function (btn) {
+  // 写真をスタンプに登録／解除する（元の usestamp / unusestamp のトグル）。
+  function setStampAddState(btn, registered) {
+    btn.setAttribute("data-registered", registered ? "1" : "0");
+    btn.title = registered
+      ? btn.getAttribute("data-unuse-label") || ""
+      : btn.getAttribute("data-use-label") || "";
+    var icon = btn.querySelector("i");
+    if (icon) {
+      icon.className = registered ? "icon icon-remove-circle" : "icon icon-ok-circle";
+    }
+  }
+  var stampAddBtns = document.querySelectorAll("[data-stamp-add]");
+  if (stampAddBtns.length > 0) {
+    fetch("/stamps.json")
+      .then(function (res) {
+        return res.json();
+      })
+      .then(function (stamps) {
+        var urls = {};
+        stamps.forEach(function (s) {
+          urls[s.image_url] = true;
+        });
+        stampAddBtns.forEach(function (btn) {
+          if (urls[btn.getAttribute("data-image-url") || ""]) {
+            setStampAddState(btn, true);
+          }
+        });
+      })
+      .catch(function () {});
+  }
+  stampAddBtns.forEach(function (btn) {
     btn.addEventListener("click", function () {
+      var registered = btn.getAttribute("data-registered") === "1";
       var form = new FormData();
       form.append("image_url", btn.getAttribute("data-image-url") || "");
-      form.append("statement_id", btn.getAttribute("data-stamp-add") || "");
-      fetch("/stamp", { method: "POST", body: form })
-        .then(function (res) {
-          if (res.ok) {
-            btn.textContent = "登録済み";
-            btn.disabled = true;
-          }
-        })
-        .catch(function () {});
+      if (registered) {
+        fetch("/stamp", { method: "DELETE", body: form })
+          .then(function (res) {
+            if (res.ok) setStampAddState(btn, false);
+          })
+          .catch(function () {});
+      } else {
+        form.append("statement_id", btn.getAttribute("data-stamp-add") || "");
+        fetch("/stamp", { method: "POST", body: form })
+          .then(function (res) {
+            if (res.ok) setStampAddState(btn, true);
+          })
+          .catch(function () {});
+      }
     });
   });
 
@@ -319,6 +350,32 @@
       box.appendChild(img);
     });
   }
+  // 元のプラグイン同様、自分の状態に応じて片方のボタンだけを見せる。
+  function notifyLikeUpdateButtons(name, map) {
+    var me = document.body.getAttribute("data-me") || "";
+    var mine = Object.prototype.hasOwnProperty.call(map, me);
+    var add = document.querySelector('[data-notify-like-add="' + name + '"]');
+    var remove = document.querySelector(
+      '[data-notify-like-remove="' + name + '"]'
+    );
+    if (add) add.style.display = mine ? "none" : "";
+    if (remove) remove.style.display = mine ? "" : "none";
+  }
+  function notifyLikeRefresh(name, map) {
+    notifyLikeRenderIcons(name, map);
+    notifyLikeUpdateButtons(name, map);
+  }
+  document.querySelectorAll("[data-notify-like]").forEach(function (box) {
+    var name = box.getAttribute("data-notify-like") || "";
+    fetch("/plugin/notify/like/" + encodeURIComponent(name) + ".json")
+      .then(function (res) {
+        return res.json();
+      })
+      .then(function (map) {
+        notifyLikeRefresh(name, map);
+      })
+      .catch(function () {});
+  });
   document.querySelectorAll("[data-notify-like-add]").forEach(function (btn) {
     btn.addEventListener("click", function () {
       var name = btn.getAttribute("data-notify-like-add") || "";
@@ -327,7 +384,7 @@
           return res.json();
         })
         .then(function (map) {
-          notifyLikeRenderIcons(name, map);
+          notifyLikeRefresh(name, map);
         })
         .catch(function () {});
     });
@@ -347,7 +404,7 @@
           return res.json();
         })
         .then(function (map) {
-          notifyLikeRenderIcons(name, map);
+          notifyLikeRefresh(name, map);
         })
         .catch(function () {});
     });
@@ -368,7 +425,7 @@
           return res.json();
         })
         .then(function (map) {
-          notifyLikeRenderIcons(name, map);
+          notifyLikeRefresh(name, map);
         })
         .catch(function () {});
     });
