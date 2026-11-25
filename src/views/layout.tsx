@@ -105,7 +105,7 @@ export const Layout: FC<
                     placeholder={term(settings, "search")}
                   />
                   <button type="submit" className="btn" title={term(settings, "search")}>
-                    <i className="icon icon-search"></i>
+                    <i className="gicon gicon-search"></i>
                   </button>
                 </form>
                 <div className="dropdown dropdown-right">

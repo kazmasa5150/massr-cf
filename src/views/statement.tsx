@@ -79,7 +79,7 @@ export const StatementItem: FC<{
                   data-unuse-label={term(settings, "unuse_stamp")}
                   title={term(settings, "use_stamp")}
                 >
-                  <i className="icon icon-ok-circle"></i>
+                  <i className="gicon gicon-ok-circle"></i>
                 </button>
               </span>
             ))}
@@ -94,14 +94,14 @@ export const StatementItem: FC<{
         <div className="statement-action">
           {own && (
             <a href="#" data-delete-btn={s.id} title={term(settings, "delete")}>
-              <i className="icon icon-trash"></i>
+              <i className="gicon gicon-trash"></i>
             </a>
           )}
           <a href="#" data-stamp-open={s.id} title={term(settings, "attach_stamp")}>
-            <i className="icon icon-th"></i>
+            <i className="gicon gicon-th"></i>
           </a>
           <a href="#" data-res-btn={s.id} title={term(settings, "res")}>
-            <i className="icon icon-comment"></i>
+            <i className="gicon gicon-comment"></i>
             {s.ref_ids.length > 0 ? `(${s.ref_ids.length})` : ""}
           </a>
           <a
@@ -157,7 +157,7 @@ export const StatementItem: FC<{
                 {term(settings, "post_res")}
               </button>
               <label className="photo-button" title={term(settings, "attach_photo")}>
-                <i className="icon icon-camera"></i>
+                <i className="gicon gicon-camera"></i>
                 <input type="file" name="photo" accept="image/*" multiple />
               </label>
             </div>
@@ -209,7 +209,7 @@ export const PostForm: FC<{ settings: MassrSettings }> = ({ settings }) => (
         </button>
         <span className="photo-items">
           <label className="photo-button" title={term(settings, "attach_photo")}>
-            <i className="icon icon-camera"></i>
+            <i className="gicon gicon-camera"></i>
             <input type="file" name="photo" accept="image/*" multiple />
           </label>
         </span>
@@ -220,7 +220,7 @@ export const PostForm: FC<{ settings: MassrSettings }> = ({ settings }) => (
             data-stamp-open=""
             title={term(settings, "attach_stamp")}
           >
-            <i className="icon icon-th"></i>
+            <i className="gicon gicon-th"></i>
           </button>
         </span>
       </div>

@@ -384,12 +384,16 @@ div.new-post textarea {
   border: none;
   font-size: 12px;
 }
-.photo-button input[type="file"] {
-  font-size: 11px;
-  max-width: 150px;
+.photo-button input[type="file"],
+input.file-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  overflow: hidden;
 }
 /* Bootstrap 2 の glyphicons スプライト（元の <i class="icon-*"> 相当）。 */
-.icon {
+.gicon {
   display: inline-block;
   width: 14px;
   height: 14px;
@@ -398,31 +402,31 @@ div.new-post textarea {
   background-image: url("/img/glyphicons-halflings.png");
   background-repeat: no-repeat;
 }
-.icon-th {
+.gicon-th {
   background-position: -240px 0;
 }
-.icon-trash {
+.gicon-trash {
   background-position: -456px 0;
 }
-.icon-search {
+.gicon-search {
   background-position: -48px 0;
 }
-.icon-camera {
+.gicon-camera {
   background-position: -120px -48px;
 }
-.icon-comment {
+.gicon-comment {
   background-position: -240px -120px;
 }
-.icon-ok-circle {
+.gicon-ok-circle {
   background-position: -192px -96px;
 }
-.icon-remove-circle {
+.gicon-remove-circle {
   background-position: -168px -96px;
 }
-.icon-share-alt {
+.gicon-share-alt {
   background-position: -336px -96px;
 }
-.icon-remove {
+.gicon-remove {
   background-position: -312px 0;
 }
 

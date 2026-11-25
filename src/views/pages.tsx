@@ -174,7 +174,8 @@ export const UserFormPage: FC<
           <label>
             {term(settings, "icon")}
             {icon && <img className="icon" src={icon} alt="" />}
-            <input type="file" name="newicon" accept="image/*" />
+            <span className="photo-button">{term(settings, "upload_icon")}</span>
+            <input type="file" name="newicon" accept="image/*" className="file-hidden" />
           </label>
           <span className="note">{term(settings, "icon_size_info")}</span>
         </p>
@@ -328,13 +329,13 @@ export const SearchPage: FC<
         <span className="pin">
           <a href={`/search?q=${encodeURIComponent(pin.word)}`}>{pin.label}</a>
           <button type="button" data-pin-delete={pin.word} title="ピンを外す">
-            <i className="icon icon-remove"></i>
+            <i className="gicon gicon-remove"></i>
           </button>
         </span>
       ))}
       {!pins.some((p) => p.word === q) && (
         <button type="button" data-pin-add={q} title="この検索をピン留め">
-          <i className="icon icon-share-alt"></i>
+          <i className="gicon gicon-share-alt"></i>
         </button>
       )}
     </div>

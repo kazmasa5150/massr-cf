@@ -105,7 +105,7 @@
       : btn.getAttribute("data-use-label") || "";
     var icon = btn.querySelector("i");
     if (icon) {
-      icon.className = registered ? "icon icon-remove-circle" : "icon icon-ok-circle";
+      icon.className = registered ? "gicon gicon-remove-circle" : "gicon gicon-ok-circle";
     }
   }
   var stampAddBtns = document.querySelectorAll("[data-stamp-add]");

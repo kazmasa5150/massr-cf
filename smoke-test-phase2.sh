@@ -189,8 +189,8 @@ top2=$(curl -s "${A[@]}" $B/)
 contains "stamp button in post form" 'data-stamp-open=""' "$top2"
 astmt=$(curl -s "${A[@]}" $B/statement/$sid)
 contains "stamp button in statement actions" "data-stamp-open=\"$sid\"" "$astmt"
-contains "trash icon in statement actions" 'icon-trash' "$astmt"
-contains "stamp icon in statement actions" 'icon-th' "$astmt"
+contains "trash icon in statement actions" 'gicon-trash' "$astmt"
+contains "stamp icon in statement actions" 'gicon-th' "$astmt"
 appjs2=$(curl -s $B/js/app.js)
 contains "app.js builds stamp popup" 'stamp-popup' "$appjs2"
 stamp2=$(curl -s "${A[@]}" -X POST -d "image_url=$purl&statement_id=$sid" $B/stamp)
@@ -210,14 +210,16 @@ contains "like button after like uses wakaruwa" '/img/wakaruwa.png' "$spage2"
 case "$spage2" in *'/img/wakaranaiwa.png'*) echo 'FAIL: liked page has no wakaranaiwa'; fail=$((fail+1));; *) echo 'PASS: liked page has no wakaranaiwa'; pass=$((pass+1));; esac
 
 # --- icon-only buttons (original UI parity) ---
-contains "search button is icon-only" 'icon-search' "$top2"
-contains "post form photo attach is icon-only" 'icon-camera' "$top2"
-contains "res button is icon-only" 'icon-comment' "$astmt"
+contains "search button is icon-only" 'gicon-search' "$top2"
+contains "post form photo attach is icon-only" 'gicon-camera' "$top2"
+contains "res button is icon-only" 'gicon-comment' "$astmt"
 case "$astmt" in *'class="like-label"'*) echo 'FAIL: like button has no text label'; fail=$((fail+1));; *) echo 'PASS: like button has no text label'; pass=$((pass+1));; esac
 contains "notify-like add button is image-only" '<img src="/img/wakaranaiwa.png" alt="わかるわ">' "$top2"
-contains "photo stamp toggle uses ok-circle icon" 'icon-ok-circle' "$astmt"
+contains "photo stamp toggle uses ok-circle icon" 'gicon-ok-circle' "$astmt"
 sh2=$(curl -s "${A[@]}" "$B/search?q=photo")
-contains "pin add button uses share-alt icon" 'icon-share-alt' "$sh2"
+contains "pin add button uses share-alt icon" 'gicon-share-alt' "$sh2"
 contains "app.js toggles stamp registration" 'data-registered' "$appjs2"
+userpage=$(curl -s "${A[@]}" $B/user)
+contains "settings icon input is hidden" 'file-hidden' "$userpage"
 
 echo "== RESULT: pass=$pass fail=$fail"
