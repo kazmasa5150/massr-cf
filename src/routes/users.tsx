@@ -4,6 +4,7 @@ import type { AppEnv } from "../types";
 import {
   PAGE_LIMIT,
   STATUS,
+  changeUserEmail,
   changeUserStatus,
   countAdmins,
   clearResNotifications,
@@ -324,6 +325,19 @@ app.put("/user/:massr_id", async (c) => {
 app.delete("/user/:massr_id", async (c) => {
   const ok = await adminDeleteUser(c, c.req.param("massr_id"));
   return ok ? c.body(null, 204) : c.redirect("/");
+});
+
+/** 管理者によるメールアドレス変更（ログインの付け替え）。 */
+app.put("/user/:massr_id/email", async (c) => {
+  const me = c.get("currentUser");
+  if (!me || me.status !== STATUS.ADMIN) return c.json({ error: "forbidden" }, 403);
+  const body = await c.req.json().catch(() => null);
+  const email = typeof body?.email === "string" ? body.email : "";
+  const result = await changeUserEmail(c.env.DB, c.req.param("massr_id"), email);
+  if (result === "ok") return c.body(null, 204);
+  if (result === "duplicate") return c.json({ error: "duplicate" }, 409);
+  if (result === "missing") return c.json({ error: "missing" }, 404);
+  return c.json({ error: "invalid" }, 400);
 });
 
 /** HTML フォームからの管理者操作（_method による振り分け、JS なしでも動くように）。 */

@@ -5,8 +5,10 @@
 import { describe, it, expect } from "vitest";
 import {
   STATUS,
+  changeUserEmail,
   changeUserStatus,
   createUser,
+  getUserByEmail,
   getUserByMassrId,
   updateUserProfile,
   userToHash,
@@ -93,6 +95,28 @@ describe("管理者・認可の判定（元の admin? / authorized?）", () => {
     const after = await getUserByMassrId(db(), user.massr_id);
     expect(after?.status === STATUS.ADMIN).toBe(false);
     expect(after?.status !== STATUS.UNAUTHORIZED).toBe(true);
+  });
+});
+
+describe("changeUserEmail（管理者によるメール変更）", () => {
+  it("メールアドレスを変更でき、新しいアドレスで引ける", async () => {
+    const user = await createUser(db(), createInput(0));
+    const result = await changeUserEmail(db(), user.massr_id, "new@example.com");
+    expect(result).toBe("ok");
+    expect((await getUserByEmail(db(), "new@example.com"))?.massr_id).toBe(user.massr_id);
+    expect(await getUserByEmail(db(), "wasamas@example.com")).toBeNull();
+  });
+
+  it("他のユーザが使っているアドレスには変更できない", async () => {
+    await createUser(db(), createInput(0));
+    const user2 = await createUser(db(), createInput(1));
+    const result = await changeUserEmail(db(), user2.massr_id, "wasamas@example.com");
+    expect(result).toBe("duplicate");
+  });
+
+  it("形式が不正なアドレスは拒否する", async () => {
+    const user = await createUser(db(), createInput(0));
+    expect(await changeUserEmail(db(), user.massr_id, "not-an-email")).toBe("invalid");
   });
 });
 

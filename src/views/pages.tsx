@@ -212,8 +212,16 @@ export const UsersPage: FC<
               </a>
               <span className="massr-id">@{u.massr_id}</span>
               <span className="status">{statusLabel(settings, u.status)}</span>
+              {iAmAdmin && <span className="user-email">{u.email}</span>}
               {iAmAdmin && !isMe && (
                 <span className="admin-actions">
+                  <button
+                    type="button"
+                    data-email-change={u.massr_id}
+                    data-current-email={u.email}
+                  >
+                    メール変更
+                  </button>
                   {u.status === STATUS.UNAUTHORIZED && (
                     <form method="post" action={`/user/${u.massr_id}`}>
                       <input type="hidden" name="_method" value="put" />

@@ -182,9 +182,25 @@ export const Layout: FC<
               </div>
             )}
           </div>
-          <footer style="background-image:url('/img/masao_footer.jpg')">
-            <div>Massr (C) The wasam@s production</div>
-          </footer>
+          {me && sidebar ? (
+            <footer>
+              <div className="row-fluid">
+                <div className="span9 footer-credit">
+                  <div>Massr (C) The wasam@s production</div>
+                </div>
+                <div className="span3 footer-masao">
+                  <img src="/img/masao_footer.jpg" alt="" />
+                </div>
+              </div>
+            </footer>
+          ) : (
+            <footer
+              className="footer-full"
+              style="background-image:url('/img/masao_footer.jpg')"
+            >
+              <div>Massr (C) The wasam@s production</div>
+            </footer>
+          )}
         </div>
       </body>
     </html>

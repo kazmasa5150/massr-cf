@@ -335,6 +335,38 @@
     }
   });
 
+  // 管理者用：メンバーのメールアドレス変更（ログインの付け替え）。
+  document.querySelectorAll("[data-email-change]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var massrId = btn.getAttribute("data-email-change") || "";
+      var current = btn.getAttribute("data-current-email") || "";
+      var email = window.prompt(
+        "新しいメールアドレス（この人のログインに使うアドレスになります）",
+        current
+      );
+      if (email === null || email.trim() === "" || email.trim() === current) return;
+      fetch("/user/" + encodeURIComponent(massrId) + "/email", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim() }),
+      })
+        .then(function (res) {
+          if (res.status === 204) {
+            location.reload();
+          } else if (res.status === 409) {
+            alert("そのメールアドレスは他のメンバーが使っています。");
+          } else if (res.status === 400) {
+            alert("メールアドレスの形式が正しくありません。");
+          } else {
+            alert("変更できませんでした。");
+          }
+        })
+        .catch(function () {
+          alert("変更できませんでした。");
+        });
+    });
+  });
+
   // 画像が無いマサオ等は隠す（icon プラグインの月替わり先に画像が無い場合）。
   document.querySelectorAll("img.masao-img").forEach(function (img) {
     img.addEventListener("error", function () {

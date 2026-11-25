@@ -230,4 +230,25 @@ case "$appcss" in *'.dropdown:hover .dropdown-menu'*) echo 'FAIL: dropdown is cl
 case "$upage" in *'profile-links'*) echo 'FAIL: user page has no link row'; fail=$((fail+1));; *) echo 'PASS: user page has no link row'; pass=$((pass+1));; esac
 contains "notify-like buttons wrapped for right alignment" 'notify-like-buttons' "$top2"
 
+
+# --- admin email change (must run last: it re-links bob's login) ---
+userspage=$(curl -s "${A[@]}" $B/users.html)
+contains "users page has email change button" 'data-email-change="bob"' "$userspage"
+contains "admin sees member emails" 'bob@example.com' "$userspage"
+contains "footer credit aligns to main column" 'footer-credit' "$top2"
+contains "footer masao aligns to sidebar column" 'footer-masao' "$top2"
+code=$(curl -s -o /dev/null -w '%{http_code}' -X PUT "${A[@]}" -H 'Content-Type: application/json' -d '{"email":"alice@example.com"}' $B/user/bob/email)
+check "duplicate email rejected" '409' "$code"
+code=$(curl -s -o /dev/null -w '%{http_code}' -X PUT "${A[@]}" -H 'Content-Type: application/json' -d '{"email":"not-an-email"}' $B/user/bob/email)
+check "invalid email rejected" '400' "$code"
+code=$(curl -s -o /dev/null -w '%{http_code}' -X PUT "${CAROL[@]}" -H 'Content-Type: application/json' -d '{"email":"mallory@example.com"}' $B/user/alice/email)
+check "non-admin cannot change email" '403' "$code"
+code=$(curl -s -o /dev/null -w '%{http_code}' -X PUT "${A[@]}" -H 'Content-Type: application/json' -d '{"email":"bob2@example.com"}' $B/user/bob/email)
+check "admin changes bob email" '204' "$code"
+BOB2=(-H 'x-dev-email: bob2@example.com')
+bob2top=$(curl -s "${BOB2[@]}" $B/)
+contains "bob logs in with new email" '参加しますか？' "$bob2top"
+oldloc=$(curl -s -o /dev/null -w '%{http_code} %{redirect_url}' "${BOB[@]}" $B/)
+case "$oldloc" in '302'*'/user') echo 'PASS: old email no longer logs in'; pass=$((pass+1));; *) echo "FAIL: old email no longer logs in ($oldloc)"; fail=$((fail+1));; esac
+
 echo "== RESULT: pass=$pass fail=$fail"

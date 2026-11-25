@@ -229,6 +229,32 @@ export async function changeUserStatus(
     .run();
 }
 
+/**
+ * 管理者によるメールアドレス変更。メールはログイン（Cloudflare Access）の
+ * 本人確認キーなので、変更するとその人のログイン先が新しいアドレスになる。
+ * 形式が不正なら "invalid"、他のユーザが使用中なら "duplicate" を返す。
+ */
+export async function changeUserEmail(
+  db: D1Database,
+  massrId: string,
+  email: string,
+): Promise<"ok" | "invalid" | "duplicate" | "missing"> {
+  const trimmed = email.trim();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed) || trimmed.length > 254) {
+    return "invalid";
+  }
+  const target = await getUserByMassrId(db, massrId);
+  if (!target) return "missing";
+  const existing = await getUserByEmail(db, trimmed);
+  if (existing && existing.id !== target.id) return "duplicate";
+  const now = Math.floor(Date.now() / 1000);
+  await db
+    .prepare("UPDATE users SET email = ?, updated_at = ? WHERE id = ?")
+    .bind(trimmed, now, target.id)
+    .run();
+  return "ok";
+}
+
 /** 管理者によるユーザ削除。本人の発言と、他人の発言へのイイネも消す（元の delete_all_statements 相当）。 */
 export async function deleteUserCascade(
   db: D1Database,
