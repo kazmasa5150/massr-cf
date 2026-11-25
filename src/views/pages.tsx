@@ -365,10 +365,6 @@ export const PhotosPage: FC<
             <a href={`/statement/${s.id}`}>
               <img src={url} alt={s.body ?? ""} />
             </a>
-            <figcaption>
-              <a href={`/user/${s.user.massr_id}`}>{s.user.name}</a>
-              <span className="created-at">{s.created_at}</span>
-            </figcaption>
           </figure>
         )),
       )}

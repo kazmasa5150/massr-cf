@@ -58,6 +58,7 @@ check "stamp deleted" "[]" "$stamps"
 # --- photos pages ---
 pp=$(curl -s "${A[@]}" $B/statement/photos)
 contains "all photos page" '/media/' "$pp"
+case "$pp" in *'<figcaption'*) echo 'FAIL: photos page has no caption'; fail=$((fail+1));; *) echo 'PASS: photos page has no caption'; pass=$((pass+1));; esac
 up=$(curl -s "${A[@]}" $B/user/alice/photos.json)
 contains "user photos json" '"photos":["/media/' "$up"
 
